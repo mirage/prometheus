@@ -13,7 +13,7 @@ build: [
 ]
 build-test: [
   ["ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "true" "-n" "prometheus-app"]
-  ["ocaml" "pkg/pkg.ml" "test" "_build/prometheus/tests/test.native"]
+  ["ocaml" "pkg/pkg.ml" "test" "_build/tests/test.native"]
 ]
 
 depends: [
@@ -24,4 +24,4 @@ depends: [
   "lwt" {>="2.5.0"}
   "alcotest" {test}
 ]
-available: [ocaml-version >= "4.03.0"]
+available: [ocaml-version >= "4.02.3"]
