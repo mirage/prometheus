@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="next" href="Prometheus_app.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Prometheus" rel="Chapter" href="Prometheus.html">
+<link title="Prometheus_app" rel="Chapter" href="Prometheus_app.html">
+<link title="Prometheus_unix" rel="Chapter" href="Prometheus_unix.html"><title>Prometheus</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Prometheus_app.html" title="Prometheus_app">Next</a>
+</div>
+<h1>Module <a href="type_Prometheus.html">Prometheus</a></h1>
+
+<pre><span class="keyword">module</span> Prometheus: <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
+Collect metrics for Prometheus.
+    See: https://prometheus.io/
+<p>
+
+    Notes:
+<p>
+<ul>
+<li>The Prometheus docs require that client libraries are thread-safe. We interpret this to mean safe
+      with Lwt threads, NOT with native threading.</li>
+</ul>
+<ul>
+<li>This library is intended to be a dependency of any library that might need to report metrics,
+      even though many applications will not enable it. Therefore it should have minimal dependencies.</li>
+</ul>
+<br>
+</div>
+<hr width="100%">
+
+<pre><code><span id="TYPEmetric_type"><span class="keyword">type</span> <code class="type"></code>metric_type</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmetric_type.Counter"><span class="constructor">Counter</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmetric_type.Gauge"><span class="constructor">Gauge</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmetric_type.Summary"><span class="constructor">Summary</span></span></code></td>
+
+</tr></table>
+
+
+
+<pre><span class="keyword">module type</span> <a href="Prometheus.NAME.html">NAME</a> = <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.NAME.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+A string that meets some additional requirements.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.MetricName.html">MetricName</a>: <code class="type"><a href="Prometheus.NAME.html">NAME</a></code><code class="type"> </code></pre><div class="info">
+A valid name for a metric.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.LabelName.html">LabelName</a>: <code class="type"><a href="Prometheus.NAME.html">NAME</a></code><code class="type"> </code></pre><div class="info">
+A valid name for a label.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.MetricInfo.html">MetricInfo</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.MetricInfo.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Metadata about a metric.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.LabelSetMap.html">LabelSetMap</a>: <code class="type">Map.S</code><code class="type">  with type key = string list</code></pre><div class="info">
+A map indexed by a set of labels.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.MetricFamilyMap.html">MetricFamilyMap</a>: <code class="type">Map.S</code><code class="type">  with type key = MetricInfo.t</code></pre><div class="info">
+A map indexed by metric families.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.CollectorRegistry.html">CollectorRegistry</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.CollectorRegistry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+A collection of metric reporters.
+</div>
+
+<pre><span class="keyword">module type</span> <a href="Prometheus.METRIC.html">METRIC</a> = <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.METRIC.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Operations common to all types of metric.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.Counter.html">Counter</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.Counter.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+A counter is a cumulative metric that represents a single numerical value that only ever goes up.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.Gauge.html">Gauge</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.Gauge.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+A gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Prometheus.Summary.html">Summary</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus.Summary.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+A summary is a metric that records both the number of readings and their total.
+</div>
+</body></html>

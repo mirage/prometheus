@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Prometheus_app.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Prometheus" rel="Chapter" href="Prometheus.html">
+<link title="Prometheus_app" rel="Chapter" href="Prometheus_app.html">
+<link title="Prometheus_unix" rel="Chapter" href="Prometheus_unix.html"><title>Prometheus_unix</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Prometheus_app.html" title="Prometheus_app">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Prometheus_unix.html">Prometheus_unix</a></h1>
+
+<pre><span class="keyword">module</span> Prometheus_unix: <code class="code"><span class="keyword">sig</span></code> <a href="Prometheus_unix.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
+Report metrics for Prometheus.
+    See: https://prometheus.io/
+<p>
+
+    Notes:
+<p>
+<ul>
+<li>This module is intended to be used by applications that export Prometheus metrics.
+      Libraries should only link against the `Prometheus` module.</li>
+</ul>
+<ul>
+<li>This module automatically initialises itself and registers some standard collectors relating to
+      GC statistics, as recommended by Prometheus.</li>
+</ul>
+<ul>
+<li>This extends <code class="code"><span class="constructor">Prometheus_app</span></code> with support for cmdliner option parsing, a server pre-configured
+      for Unix, and a start-time metric that uses <code class="code"><span class="constructor">Unix</span>.gettimeofday</code>.</li>
+</ul>
+<br>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> </pre>
+
+
+<pre><span id="VALserve"><span class="keyword">val</span> serve</span> : <code class="type"><a href="Prometheus_unix.html#TYPEconfig">config</a> -> unit Lwt.t list</code></pre><div class="info ">
+<code class="code">serve&nbsp;config</code> starts a Cohttp server according to config.
+    It returns a singleton list containing the thread to monitor,
+    or an empty list if no server is configured.<br>
+</div>
+
+<pre><span id="VALopts"><span class="keyword">val</span> opts</span> : <code class="type"><a href="Prometheus_unix.html#TYPEconfig">config</a> Cmdliner.Term.t</code></pre><div class="info ">
+<code class="code">opts</code> is the extra command-line options to offer Prometheus
+    monitoring.<br>
+</div>
+</body></html>

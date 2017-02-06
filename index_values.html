@@ -1,0 +1,151 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Prometheus" rel="Chapter" href="Prometheus.html">
+<link title="Prometheus_app" rel="Chapter" href="Prometheus_app.html">
+<link title="Prometheus_unix" rel="Chapter" href="Prometheus_unix.html"><title>Index of values</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of values</h1>
+<table>
+<tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Prometheus_app.Cohttp.html#VALcallback">callback</a> [<a href="Prometheus_app.Cohttp.html">Prometheus_app.Cohttp</a>]</td>
+<td></td></tr>
+<tr><td><a href="Prometheus.CollectorRegistry.html#VALcollect">collect</a> [<a href="Prometheus.CollectorRegistry.html">Prometheus.CollectorRegistry</a>]</td>
+<td><div class="info">
+Read the current value of each metric.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.NAME.html#VALcompare">compare</a> [<a href="Prometheus.NAME.html">Prometheus.NAME</a>]</td>
+<td></td></tr>
+<tr><td><a href="Prometheus.CollectorRegistry.html#VALcreate">create</a> [<a href="Prometheus.CollectorRegistry.html">Prometheus.CollectorRegistry</a>]</td>
+<td><div class="info">
+<code class="code">create&nbsp;()</code> is a fresh registry.
+</div>
+</td></tr>
+<tr><td align="left"><br>D</td></tr>
+<tr><td><a href="Prometheus.Gauge.html#VALdec">dec</a> [<a href="Prometheus.Gauge.html">Prometheus.Gauge</a>]</td>
+<td><div class="info">
+<code class="code">dec&nbsp;t&nbsp;v</code> decreases the current value of the guage by <code class="code">v</code>.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.Gauge.html#VALdec_one">dec_one</a> [<a href="Prometheus.Gauge.html">Prometheus.Gauge</a>]</td>
+<td></td></tr>
+<tr><td><a href="Prometheus.CollectorRegistry.html#VALdefault">default</a> [<a href="Prometheus.CollectorRegistry.html">Prometheus.CollectorRegistry</a>]</td>
+<td><div class="info">
+The default registry.
+</div>
+</td></tr>
+<tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Prometheus.Gauge.html#VALinc">inc</a> [<a href="Prometheus.Gauge.html">Prometheus.Gauge</a>]</td>
+<td><div class="info">
+<code class="code">inc&nbsp;t&nbsp;v</code> increases the current value of the guage by <code class="code">v</code>.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.Counter.html#VALinc">inc</a> [<a href="Prometheus.Counter.html">Prometheus.Counter</a>]</td>
+<td><div class="info">
+<code class="code">inc&nbsp;t&nbsp;v</code> increases <code class="code">t</code> by <code class="code">v</code>, which must be non-negative.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.Gauge.html#VALinc_one">inc_one</a> [<a href="Prometheus.Gauge.html">Prometheus.Gauge</a>]</td>
+<td></td></tr>
+<tr><td><a href="Prometheus.Counter.html#VALinc_one">inc_one</a> [<a href="Prometheus.Counter.html">Prometheus.Counter</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>L</td></tr>
+<tr><td><a href="Prometheus.METRIC.html#VALlabels">labels</a> [<a href="Prometheus.METRIC.html">Prometheus.METRIC</a>]</td>
+<td><div class="info">
+<code class="code">labels&nbsp;family&nbsp;label_values</code> is the metric in <code class="code">family</code> with these values for the labels.
+</div>
+</td></tr>
+<tr><td align="left"><br>O</td></tr>
+<tr><td><a href="Prometheus.Summary.html#VALobserve">observe</a> [<a href="Prometheus.Summary.html">Prometheus.Summary</a>]</td>
+<td><div class="info">
+<code class="code">observe&nbsp;t&nbsp;v</code> increases the total by <code class="code">v</code> and the count by one.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus_unix.html#VALopts">opts</a> [<a href="Prometheus_unix.html">Prometheus_unix</a>]</td>
+<td><div class="info">
+<code class="code">opts</code> is the extra command-line options to offer Prometheus
+    monitoring.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus_app.TextFormat_0_0_4.html#VALoutput">output</a> [<a href="Prometheus_app.TextFormat_0_0_4.html">Prometheus_app.TextFormat_0_0_4</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>P</td></tr>
+<tr><td><a href="Prometheus.NAME.html#VALpp">pp</a> [<a href="Prometheus.NAME.html">Prometheus.NAME</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>R</td></tr>
+<tr><td><a href="Prometheus.CollectorRegistry.html#VALregister">register</a> [<a href="Prometheus.CollectorRegistry.html">Prometheus.CollectorRegistry</a>]</td>
+<td><div class="info">
+<code class="code">register&nbsp;t&nbsp;metric&nbsp;collector</code> adds <code class="code">metric</code> to the set of metrics being collected.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.CollectorRegistry.html#VALregister_pre_collect">register_pre_collect</a> [<a href="Prometheus.CollectorRegistry.html">Prometheus.CollectorRegistry</a>]</td>
+<td><div class="info">
+<code class="code">register_pre_collect&nbsp;t&nbsp;fn</code> arranges for <code class="code">fn&nbsp;()</code> to be called at the start
+      of each collection.
+</div>
+</td></tr>
+<tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Prometheus_unix.html#VALserve">serve</a> [<a href="Prometheus_unix.html">Prometheus_unix</a>]</td>
+<td><div class="info">
+<code class="code">serve&nbsp;config</code> starts a Cohttp server according to config.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.Gauge.html#VALset">set</a> [<a href="Prometheus.Gauge.html">Prometheus.Gauge</a>]</td>
+<td><div class="info">
+<code class="code">set&nbsp;t&nbsp;v</code> sets the current value of the guage to <code class="code">v</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Prometheus.Summary.html#VALtime">time</a> [<a href="Prometheus.Summary.html">Prometheus.Summary</a>]</td>
+<td><div class="info">
+<code class="code">time&nbsp;t&nbsp;gettime&nbsp;f</code> calls <code class="code">gettime&nbsp;()</code> before and after executing <code class="code">f&nbsp;()</code> and
+      observes the difference.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.Gauge.html#VALtime">time</a> [<a href="Prometheus.Gauge.html">Prometheus.Gauge</a>]</td>
+<td><div class="info">
+<code class="code">time&nbsp;t&nbsp;gettime&nbsp;f</code> calls <code class="code">gettime&nbsp;()</code> before and after executing <code class="code">f&nbsp;()</code> and
+      increases the metric by the difference.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.Gauge.html#VALtrack_inprogress">track_inprogress</a> [<a href="Prometheus.Gauge.html">Prometheus.Gauge</a>]</td>
+<td><div class="info">
+<code class="code">track_inprogress&nbsp;t&nbsp;f</code> increases the value of the gauge by one while <code class="code">f&nbsp;()</code> is running.
+</div>
+</td></tr>
+<tr><td align="left"><br>V</td></tr>
+<tr><td><a href="Prometheus.METRIC.html#VALv">v</a> [<a href="Prometheus.METRIC.html">Prometheus.METRIC</a>]</td>
+<td><div class="info">
+<code class="code">v</code> is a convenience wrapper around <code class="code">v_labels</code> for the case where there are no labels.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.NAME.html#VALv">v</a> [<a href="Prometheus.NAME.html">Prometheus.NAME</a>]</td>
+<td><div class="info">
+Raises an exception if the name is not valid.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.METRIC.html#VALv_label">v_label</a> [<a href="Prometheus.METRIC.html">Prometheus.METRIC</a>]</td>
+<td><div class="info">
+<code class="code">v_label</code> is a convenience wrapper around <code class="code">v_labels</code> for the case where there is a single label.
+</div>
+</td></tr>
+<tr><td><a href="Prometheus.METRIC.html#VALv_labels">v_labels</a> [<a href="Prometheus.METRIC.html">Prometheus.METRIC</a>]</td>
+<td><div class="info">
+<code class="code">v_labels&nbsp;~label_names&nbsp;~help&nbsp;~namespace&nbsp;~subsystem&nbsp;name</code> is a family of metrics with full name
+      <code class="code">namespace_subsystem_name</code> and documentation string <code class="code">help</code>.
+</div>
+</td></tr>
+</table>
+</body>
+</html>
