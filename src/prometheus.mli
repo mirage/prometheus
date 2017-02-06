@@ -6,11 +6,6 @@
     - The Prometheus docs require that client libraries are thread-safe. We interpret this to mean safe
       with Lwt threads, NOT with native threading.
 
-    - The [time] functions are unfortunate, as they create a dependency on [Unix].
-      Maybe they should be moved elsewhere.
-
-    - The API is rather limited. In particular, it is not yet possible to write your own collectors.
-
     - This library is intended to be a dependency of any library that might need to report metrics,
       even though many applications will not enable it. Therefore it should have minimal dependencies.
 *)
@@ -32,9 +27,13 @@ module type NAME = sig
 
   val compare : t -> t -> int
 end
+(** A string that meets some additional requirements. *)
 
 module MetricName : NAME
+(** A valid name for a metric. *)
+
 module LabelName  : NAME
+(** A valid name for a label. *)
 
 module MetricInfo : sig
   type t = {
@@ -44,6 +43,7 @@ module MetricInfo : sig
     label_names : LabelName.t list;
   }
 end
+(** Metadata about a metric. *)
 
 module LabelSetMap : Map.S with type key = string list
 (** A map indexed by a set of labels. *)
@@ -76,6 +76,7 @@ module CollectorRegistry : sig
       of each collection. This is useful if one expensive call provides
       information about multiple metrics. *)
 end
+(** A collection of metric reporters. Usually, only {!CollectorRegistry.default} is used. *)
 
 module type METRIC = sig
   type family
@@ -90,7 +91,7 @@ module type METRIC = sig
   (** [v_labels ~label_names ~help ~namespace ~subsystem name] is a family of metrics with full name
       [namespace_subsystem_name] and documentation string [help]. Each metric in the family will provide
       a value for each of the labels.
-      The new family is registered with [registry] (default: [CollectorRegistry.default]). *)
+      The new family is registered with [registry] (default: {!CollectorRegistry.default}). *)
 
   val labels : family -> string list -> t
   (** [labels family label_values] is the metric in [family] with these values for the labels.
@@ -105,19 +106,17 @@ module type METRIC = sig
   val v : ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> t
   (** [v] is a convenience wrapper around [v_labels] for the case where there are no labels. *)
 end
+(** Operations common to all types of metric. *)
 
 module Counter : sig
-  (** A counter is a cumulative metric that represents a single numerical value that only ever goes up. *)
-
   include METRIC
   val inc_one : t -> unit
   val inc : t -> float -> unit
   (** [inc t v] increases [t] by [v], which must be non-negative. *)
 end
+(** A counter is a cumulative metric that represents a single numerical value that only ever goes up. *)
 
 module Gauge : sig
-  (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
-
   include METRIC
 
   val inc_one : t -> unit
@@ -139,11 +138,9 @@ module Gauge : sig
       increases the metric by the difference.
   *)
 end
+(** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
 
 module Summary : sig
-  (** A summary is a metric that records both the number of readings and their total.
-      This allows calculating the average. *)
-
   include METRIC
 
   val observe : t -> float -> unit
@@ -153,3 +150,5 @@ module Summary : sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 end
+(** A summary is a metric that records both the number of readings and their total.
+    This allows calculating the average. *)

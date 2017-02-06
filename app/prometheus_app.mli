@@ -14,8 +14,8 @@
 
 module TextFormat_0_0_4 : sig
   val output : Prometheus.CollectorRegistry.snapshot Fmt.t
-  (** Format a snapshot in Prometheus's text format, version 0.0.4. *)
 end
+(** Format a snapshot in Prometheus's text format, version 0.0.4. *)
 
 module Cohttp (S : Cohttp_lwt.Server) : sig
   val callback :
@@ -23,3 +23,4 @@ module Cohttp (S : Cohttp_lwt.Server) : sig
     Cohttp.Request.t ->
     Cohttp_lwt_body.t -> (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
 end
+(** A Cohttp callback for a web-server that exposes the Prometheus metrics. *)

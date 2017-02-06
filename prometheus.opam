@@ -5,6 +5,7 @@ license:      "Apache"
 homepage:     "https://github.com/mirage/prometheus"
 bug-reports:  "https://github.com/mirage/prometheus/issues"
 dev-repo:     "https://github.com/mirage/prometheus.git"
+doc:          "https://mirage.github.io/prometheus/"
 
 build: [
   "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "false"
