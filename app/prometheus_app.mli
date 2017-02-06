@@ -8,20 +8,18 @@
 
     - This module automatically initialises itself and registers some standard collectors relating to
       GC statistics, as recommended by Prometheus.
- *)
 
-type config
+    - This module does not depend on [Unix], and so can be used in unikernels.
+ *)
 
 module TextFormat_0_0_4 : sig
   val output : Prometheus.CollectorRegistry.snapshot Fmt.t
   (** Format a snapshot in Prometheus's text format, version 0.0.4. *)
 end
 
-val serve : config -> unit Lwt.t list
-(** [serve config] starts a Cohttp server according to config.
-    It returns a singleton list containing the thread to monitor,
-    or an empty list if no server is configured. *)
-
-val opts : config Cmdliner.Term.t
-(** [opts] is the extra command-line options to offer Prometheus
-    monitoring. *)
+module Cohttp (S : Cohttp_lwt.Server) : sig
+  val callback :
+    Cohttp_lwt_unix.Server.conn ->
+    Cohttp.Request.t ->
+    Cohttp_lwt_body.t -> (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
+end

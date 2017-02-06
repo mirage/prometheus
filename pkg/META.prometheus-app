@@ -1,8 +1,19 @@
 description = "Cohttp server for Prometheus metrics"
 version = "%%VERSION%%"
-requires = "prometheus cmdliner cohttp.lwt"
+requires = "prometheus cohttp.lwt-core"
 archive(byte)   = "prometheus-app.cma"
 archive(native) = "prometheus-app.cmxa"
 plugin(byte)    = "prometheus-app.cma"
 plugin(native)  = "prometheus-app.cmxs"
 exists_if       = "prometheus-app.cma"
+
+package "unix" (
+  description = "Unix configuration for exposing Prometheus metrics"
+  version = "%%VERSION%%"
+  requires = "prometheus-app cmdliner cohttp.lwt"
+  archive(byte)   = "prometheus-app-unix.cma"
+  archive(native) = "prometheus-app-unix.cmxa"
+  plugin(byte)    = "prometheus-app-unix.cma"
+  plugin(native)  = "prometheus-app-unix.cmxs"
+  exists_if       = "prometheus-app-unix.cma"
+)

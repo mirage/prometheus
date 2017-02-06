@@ -51,6 +51,7 @@ let () =
       Pkg.lib   "pkg/META.prometheus-app" ~dst:"META";
       Pkg.lib   "prometheus-app.opam"     ~dst:"opam";
       Pkg.mllib "app/prometheus-app.mllib";
+      Pkg.mllib "app/prometheus-app-unix.mllib";
       Pkg.test  "tests/test" ~args:(Cmd.v "-q");
     ]
   | other -> R.error_msgf "unknown package name: %s" other
