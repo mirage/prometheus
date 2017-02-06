@@ -24,8 +24,12 @@ type metric_type =
 
 module type NAME = sig
   type t = private string
+
   val v : string -> t
+  (** Raises an exception if the name is not valid. *)
+
   val pp : t Fmt.t
+
   val compare : t -> t -> int
 end
 
@@ -37,18 +41,21 @@ module MetricInfo : sig
     name : MetricName.t;
     metric_type : metric_type;
     help : string;
-    label_names : LabelName.t array;
+    label_names : LabelName.t list;
   }
 end
 
-module LabelSetMap : Map.S with type key = string array
-module MetricMap : Map.S with type key = MetricInfo.t
+module LabelSetMap : Map.S with type key = string list
+(** A map indexed by a set of labels. *)
+
+module MetricFamilyMap : Map.S with type key = MetricInfo.t
+(** A map indexed by metric families. *)
 
 module CollectorRegistry : sig
   type t
   (** A collection of metrics to be monitored. *)
 
-  type snapshot = (string * float) list LabelSetMap.t MetricMap.t
+  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
   (** The result of reading a set of metrics. *)
 
   val create : unit -> t
@@ -79,13 +86,13 @@ module type METRIC = sig
   (** A particular metric.
       e.g. "Number of HTTP responses with code=404" *)
 
-  val v_labels : label_names:string array -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> family
+  val v_labels : label_names:string list -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> family
   (** [v_labels ~label_names ~help ~namespace ~subsystem name] is a family of metrics with full name
       [namespace_subsystem_name] and documentation string [help]. Each metric in the family will provide
       a value for each of the labels.
       The new family is registered with [registry] (default: [CollectorRegistry.default]). *)
 
-  val labels : family -> string array -> t
+  val labels : family -> string list -> t
   (** [labels family label_values] is the metric in [family] with these values for the labels.
       The order of the values must be the same as the order of the [label_names] passed to [v_labels];
       you may wish to write a wrapper function with labelled arguments to avoid mistakes.
@@ -115,14 +122,22 @@ module Gauge : sig
 
   val inc_one : t -> unit
   val inc : t -> float -> unit
+  (** [inc t v] increases the current value of the guage by [v]. *)
 
   val dec_one : t -> unit
   val dec : t -> float -> unit
+  (** [dec t v] decreases the current value of the guage by [v]. *)
 
   val set : t -> float -> unit
+  (** [set t v] sets the current value of the guage to [v]. *)
 
   val track_inprogress : t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  val time : t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [track_inprogress t f] increases the value of the gauge by one while [f ()] is running. *)
+
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      increases the metric by the difference.
+  *)
 end
 
 module Summary : sig
@@ -132,5 +147,9 @@ module Summary : sig
   include METRIC
 
   val observe : t -> float -> unit
-  val time : t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [observe t v] increases the total by [v] and the count by one. *)
+
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
 end

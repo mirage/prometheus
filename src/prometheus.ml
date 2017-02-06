@@ -37,7 +37,7 @@ type metric_type =
 *)
 
 module LabelSet = struct
-  type t = string array
+  type t = string list
   let compare (a:t) (b:t) = compare a b
 end
 module LabelSetMap = Map.Make(LabelSet)
@@ -47,14 +47,14 @@ module MetricInfo = struct
     name : MetricName.t;
     metric_type : metric_type;
     help : string;
-    label_names : LabelName.t array;
+    label_names : LabelName.t list;
   }
 
   let pp_opt () = function
     | None -> ""
     | Some v -> v ^ "_"
 
-  let v ~help ?(label_names=[||]) ~metric_type ?namespace ?subsystem name =
+  let v ~help ?(label_names=[]) ~metric_type ?namespace ?subsystem name =
     let name = Printf.sprintf "%a%a%s" pp_opt namespace pp_opt subsystem name in
     {
       name = MetricName.v name;
@@ -66,18 +66,18 @@ module MetricInfo = struct
   let compare a b = MetricName.compare a.name b.name
 end
 
-module MetricMap = Map.Make(MetricInfo)
+module MetricFamilyMap = Map.Make(MetricInfo)
 
 module CollectorRegistry = struct
   type t = {
-    mutable metrics : (unit -> (string * float) list LabelSetMap.t) MetricMap.t;
+    mutable metrics : (unit -> (string * float) list LabelSetMap.t) MetricFamilyMap.t;
     mutable pre_collect : (unit -> unit) list;
   }
 
-  type snapshot = (string * float) list LabelSetMap.t MetricMap.t
+  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
 
   let create () = {
-    metrics = MetricMap.empty;
+    metrics = MetricFamilyMap.empty;
     pre_collect = [];
   }
 
@@ -86,19 +86,19 @@ module CollectorRegistry = struct
   let register_pre_collect t f = t.pre_collect <- f :: t.pre_collect
 
   let register t info collector =
-    assert (not (MetricMap.mem info t.metrics));
-    t.metrics <- MetricMap.add info collector t.metrics
+    assert (not (MetricFamilyMap.mem info t.metrics));
+    t.metrics <- MetricFamilyMap.add info collector t.metrics
 
   let collect t =
     List.iter (fun f -> f ()) t.pre_collect;
-    MetricMap.map (fun f -> f ()) t.metrics
+    MetricFamilyMap.map (fun f -> f ()) t.metrics
 end
 
 module type METRIC = sig
   type family
   type t
-  val v_labels : label_names:string array -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> family
-  val labels : family -> string array -> t
+  val v_labels : label_names:string list -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> family
+  val labels : family -> string list -> t
   val v_label : label_name:string -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> (string -> t)
   val v : ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> t
 end
@@ -124,7 +124,7 @@ end = struct
     LabelSetMap.map Child.values t.children
 
   let v_labels ~label_names ?(registry=CollectorRegistry.default) ~help ?namespace ?subsystem name =
-    let label_names = Array.map LabelName.v label_names in
+    let label_names = List.map LabelName.v label_names in
     let metric = MetricInfo.v ~metric_type:Child.metric_type ~help ~label_names ?namespace ?subsystem name in
     let t = {
       metric;
@@ -134,7 +134,7 @@ end = struct
     t
 
   let labels t label_values =
-    assert (Array.length t.metric.MetricInfo.label_names = Array.length label_values);
+    assert (List.length t.metric.MetricInfo.label_names = List.length label_values);
     match LabelSetMap.find label_values t.children with
     | Some child -> child
     | None ->
@@ -143,12 +143,12 @@ end = struct
       child
 
   let v_label ~label_name ?registry ~help ?namespace ?subsystem name =
-    let family = v_labels ~label_names:[|label_name|] ?registry ~help ?namespace ?subsystem name in
-    fun x -> labels family [| x |]
+    let family = v_labels ~label_names:[label_name] ?registry ~help ?namespace ?subsystem name in
+    fun x -> labels family [x]
 
   let v ?registry ~help ?namespace ?subsystem name =
-    let family = v_labels ~help ?registry ?namespace ?subsystem name ~label_names:[||] in
-    labels family [||]
+    let family = v_labels ~help ?registry ?namespace ?subsystem name ~label_names:[] in
+    labels family []
 end
 
 module Counter = struct
@@ -189,11 +189,11 @@ module Gauge = struct
     inc_one t;
     Lwt.finalize fn (fun () -> dec_one t; Lwt.return_unit)
 
-  let time t fn =
-    let start = Unix.gettimeofday () in
+  let time t gettimeofday fn =
+    let start = gettimeofday () in
     Lwt.finalize fn
       (fun () ->
-         let finish = Unix.gettimeofday () in
+         let finish = gettimeofday () in
          inc t (finish -. start);
          Lwt.return_unit
       )
@@ -220,8 +220,8 @@ module Summary = struct
     t.count <- t.count +. 1.0;
     t.sum <- t.sum +. v
 
-  let time t fn =
-    let start = Unix.gettimeofday () in
+  let time t gettimeofday fn =
+    let start = gettimeofday () in
     Lwt.finalize fn
       (fun () ->
          let finish = Unix.gettimeofday () in

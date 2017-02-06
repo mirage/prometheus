@@ -42,10 +42,10 @@ module TextFormat_0_0_4 = struct
       else cont := true;
       Fmt.pf f "%a=\"%a\"" LabelName.pp name output_quoted value
     in
-    Array.iter2 output_pair label_names label_values
+    List.iter2 output_pair label_names label_values
 
   let output_labels ~label_names f = function
-    | [||] -> ()
+    | [] -> ()
     | label_values -> Fmt.pf f "{%a}" output_pairs (label_names, label_values)
 
   let output_sample ~base ~label_names ~label_values f (ext, sample) =
@@ -58,7 +58,7 @@ module TextFormat_0_0_4 = struct
     List.iter (output_sample ~base:name ~label_names ~label_values f) samples
 
   let output f =
-    MetricMap.iter (fun metric samples ->
+    MetricFamilyMap.iter (fun metric samples ->
         let {MetricInfo.name; metric_type; help; label_names} = metric in
         Fmt.pf f
           "#HELP %a %a@.\
@@ -83,11 +83,11 @@ module Runtime = struct
       name = MetricName.v name;
       help;
       metric_type;
-      label_names = [| |];
+      label_names = [];
     }
     in
     let collect () =
-      LabelSetMap.singleton [| |] ["", fn ()]
+      LabelSetMap.singleton [] ["", fn ()]
     in
     info, collect
 
