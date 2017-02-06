@@ -2,10 +2,9 @@ opam-version: "1.2"
 maintainer:   "datakit@docker.com"
 authors:      ["Thomas Leonard"]
 license:      "Apache"
-homepage:     "https://github.com/docker/datakit"
-bug-reports:  "https://github.com/docker/datakit/issues"
-dev-repo:     "https://github.com/docker/datakit.git"
-doc:          "https://docker.github.io/datakit/"
+homepage:     "https://github.com/mirage/prometheus"
+bug-reports:  "https://github.com/mirage/prometheus/issues"
+dev-repo:     "https://github.com/mirage/prometheus.git"
 
 build: [
   "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "false"
