@@ -3,23 +3,13 @@
 #require "topkg"
 open Topkg
 
-let includes = function
-  | "prometheus" -> ["src"]
-  | "prometheus-app" -> ["app"]
-  | x -> failwith ("Unknown includes for package: " ^ x)
-
 let build =
   let build_with_visible_warnings c os =
     let ocamlbuild = Conf.tool "ocamlbuild" os in
     let build_dir = Conf.build_dir c in
     let debug = Cmd.(on (Conf.debug c) (v "-tag" % "debug")) in
     let profile = Cmd.(on (Conf.profile c) (v "-tag" % "profile")) in
-    let includes =
-      match includes (Conf.pkg_name c) with
-      | [] -> Cmd.empty
-      | is -> Cmd.(v "-Is" % String.concat "," is)
-    in
-    Cmd.(ocamlbuild % "-use-ocamlfind" %% debug %% profile %% includes % "-build-dir" % build_dir)
+    Cmd.(ocamlbuild % "-use-ocamlfind" %% debug %% profile % "-build-dir" % build_dir)
   in
   let cmd c os files =
     OS.Cmd.run @@ Cmd.(build_with_visible_warnings c os %% of_list files)
@@ -53,5 +43,6 @@ let () =
       Pkg.mllib "app/prometheus-app.mllib";
       Pkg.mllib "app/prometheus-app-unix.mllib";
       Pkg.test  "tests/test" ~args:(Cmd.v "-q");
+      Pkg.test  "examples/example" ~run:false;
     ]
   | other -> R.error_msgf "unknown package name: %s" other
