@@ -49,9 +49,27 @@ Prometheus.Counter.inc_one (Metrics.builds_succeeded_total build_type)
 
 ### Use by applications
 
-Applications can enable metric reporting using the `Prometheus_app` module.
+Applications can enable metric reporting using the `prometheus-app` opam package.
 This depends on cohttp and can serve the metrics collected above over HTTP.
-It provides a command-line option, `--listen-prometheus=PORT`, to enable this.
+
+The `prometheus-app.unix` ocamlfind library provides the `Prometheus_unix` module,
+which includes a cmdliner option and pre-configured web-server.
+See the `examples/example.ml` program for an example, which can be run as:
+
+```shell
+$ ./_build/examples/example.native --listen-prometheus=9090
+If run with the option --listen-prometheus=9090, this program serves metrics at
+http://localhost:9090/metrics
+Tick!
+Tick!
+...
+```
+
+Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `Unix` dependency.
+
+### API docs
+
+Generated API documentation is available at <https://mirage.github.io/prometheus/>.
 
 ## Licensing
 
