@@ -41,9 +41,8 @@ let serve = function
 let listen_prometheus =
   let open Cmdliner in
   let doc =
-    Arg.info ~doc:
-      "Port on which to provide Prometheus metrics over HTTP, \
-       of the form port or host:port"
+    Arg.info ~docs:"MONITORING OPTIONS" ~docv:"PORT" ~doc:
+      "Port on which to provide Prometheus metrics over HTTP."
       ["listen-prometheus"]
   in
   Arg.(value @@ opt (some int) None doc)
