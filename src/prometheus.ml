@@ -86,7 +86,8 @@ module CollectorRegistry = struct
   let register_pre_collect t f = t.pre_collect <- f :: t.pre_collect
 
   let register t info collector =
-    assert (not (MetricFamilyMap.mem info t.metrics));
+    if MetricFamilyMap.mem info t.metrics
+    then failwith (Fmt.strf "%a already registered" MetricName.pp info.MetricInfo.name);
     t.metrics <- MetricFamilyMap.add info collector t.metrics
 
   let collect t =
