@@ -1,0 +1,8 @@
+(executables
+ ((names (test))
+  (libraries (prometheus prometheus-app alcotest))
+))
+(alias
+ ((name    runtest)
+  (deps    (test.exe))
+  (action  (run ${<} -e -v))))

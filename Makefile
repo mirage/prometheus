@@ -12,11 +12,10 @@ depends:
 	opam pin add ${PINOPTS} prometheus-app .
 
 prometheus-app:
-	ocaml pkg/pkg.ml build -n prometheus-app -q --tests true
-	ocaml pkg/pkg.ml test _build/tests/test.native
+	jbuilder build @runtest
 
 prometheus:
-	ocaml pkg/pkg.ml build -n prometheus -q
+	jbuilder build --only-packages prometheus
 
 clean:
-	ocaml pkg/pkg.ml clean
+	rm -rf _build
