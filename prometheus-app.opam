@@ -8,16 +8,16 @@ dev-repo:     "https://github.com/mirage/prometheus.git"
 doc:          "https://mirage.github.io/prometheus/"
 
 build: [
-  "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "false"
-  "-n" "prometheus-app"
+  [ "jbuilder" "build" "--only-packages=prometheus,prometheus-app" ]
 ]
+
 build-test: [
-  ["ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "true" "-n" "prometheus-app"]
-  ["ocaml" "pkg/pkg.ml" "test" "_build/tests/test.native"]
+  [ "jbuilder" "runtest" ]
 ]
 
 depends: [
   "ocamlfind" {build}
+  "jbuilder"  {build}
   "prometheus"
   "fmt"
   "cohttp" {>="0.20.0"}

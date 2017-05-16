@@ -8,8 +8,7 @@ dev-repo:     "https://github.com/mirage/prometheus.git"
 doc:          "https://mirage.github.io/prometheus/"
 
 build: [
-  "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "false"
-  "-n" "prometheus"
+  [ "jbuilder" "build" "--only-packages=prometheus" ]
 ]
 
 depends: [
