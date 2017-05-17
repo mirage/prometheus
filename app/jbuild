@@ -1,7 +1,7 @@
 (library
  ((name        prometheus_app)
   (public_name prometheus-app)
-  (libraries   (prometheus lwt cohttp.lwt astring asetmap fmt str))
+  (libraries   (prometheus lwt cohttp.lwt astring asetmap fmt re))
   (modules     (Prometheus_app))
   (wrapped     false)
   (flags       (:standard -w "A-4-58" -strict-sequence -safe-string))
