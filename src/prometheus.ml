@@ -2,7 +2,7 @@ open! Astring
 open Asetmap
 
 module type NAME_SPEC = sig
-  val valid : Str.regexp
+  val valid : Re.re
 end
 
 module type NAME = sig
@@ -16,7 +16,7 @@ module Name(N : NAME_SPEC) : NAME = struct
   type t = string
 
   let v name =
-    if not (Str.string_match N.valid name 0) then
+    if not (Re.execp N.valid name) then
       failwith (Fmt.strf "Invalid name %S" name);
     name
 
@@ -25,8 +25,19 @@ module Name(N : NAME_SPEC) : NAME = struct
   let pp = Fmt.string
 end
 
-module MetricName = Name(struct let valid = Str.regexp "^[a-zA-Z_:][a-zA-Z0-9_:]*$" end)
-module LabelName  = Name(struct let valid = Str.regexp "^[a-zA-Z_][a-zA-Z0-9_]*$" end)
+let alphabet = Re.(alt [ rg 'a' 'z'; rg 'A' 'Z' ])
+module LabelName = struct
+  (* "^[a-zA-Z_][a-zA-Z0-9_]*$" *)
+  let start = Re.alt [ alphabet; Re.char '_' ]
+  let rest  = Re.alt [ start; Re.digit ]
+  include Name(struct let valid = Re.compile @@ Re.seq [ Re.bos; start; Re.rep rest; Re.eos] end)
+end
+module MetricName = struct
+  (* "^[a-zA-Z_:][a-zA-Z0-9_:]*$"  *)
+  let start = Re.alt [ LabelName.start; Re.char ':' ]
+  let rest = Re.alt [ start; Re.digit ]
+  include Name(struct let valid = Re.compile @@ Re.seq [ Re.bos; start; Re.rep rest; Re.eos] end)
+end
 
 type metric_type =
   | Counter
