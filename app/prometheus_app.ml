@@ -4,11 +4,11 @@ let failf fmt =
   Fmt.kstrf failwith fmt
 
 module TextFormat_0_0_4 = struct
-  let re_unquoted_escapes = Str.regexp "[\\\n]"
-  let re_quoted_escapes = Str.regexp "[\"\\\n]"
+  let re_unquoted_escapes = Re.compile @@ Re.set "\\\n"
+  let re_quoted_escapes = Re.compile @@ Re.set "\"\\\n"
 
-  let quote s =
-    match Str.matched_string s with
+  let quote g =
+    match Re.Group.get g 0 with
     | "\\" -> "\\\\"
     | "\n" -> "\\n"
     | "\"" -> "\\\""
@@ -21,10 +21,10 @@ module TextFormat_0_0_4 = struct
   (* | Histogram -> Fmt.string f "histogram" *)
 
   let output_unquoted f s =
-    Fmt.string f @@ Str.global_substitute re_unquoted_escapes quote s
+    Fmt.string f @@ Re.replace re_unquoted_escapes ~f:quote s
 
   let output_quoted f s =
-    Fmt.string f @@ Str.global_substitute re_quoted_escapes quote s
+    Fmt.string f @@ Re.replace re_quoted_escapes ~f:quote s
 
   let output_value f v =
     match classify_float v with
