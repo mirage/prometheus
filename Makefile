@@ -1,21 +1,32 @@
-PINOPTS=-y -k git
 
-TESTS = true
+.PHONY: build clean test
 
-.PHONY: all clean prometheus
+build:
+	jbuilder build @install
 
-all: prometheus prometheus-app
-	@
+test:
+	jbuilder runtest
 
-depends:
-	opam pin add ${PINOPTS} prometheus .
-	opam pin add ${PINOPTS} prometheus-app .
+install:
+	jbuilder install
 
-prometheus-app:
-	jbuilder build @runtest
-
-prometheus:
-	jbuilder build --only-packages prometheus
+uninstall:
+	jbuilder uninstall
 
 clean:
-	rm -rf _build
+	rm -rf _build *.install
+
+REPO=../../mirage/opam-repository
+PACKAGES=$(REPO)/packages
+# until we have https://github.com/ocaml/opam-publish/issues/38
+pkg-%:
+	topkg opam pkg -n $*
+	mkdir -p $(PACKAGES)/$*
+	cp -r _build/$*.* $(PACKAGES)/$*/
+	cd $(PACKAGES) && git add $*
+
+PKGS=$(basename $(wildcard *.opam))
+opam-pkg:
+	$(MAKE) $(PKGS:%=pkg-%)
+
+

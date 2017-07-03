@@ -1,6 +1,0 @@
-PKG lwt fmt cmdliner alcotest astring cohttp.lwt asetmap
-
-S src/**
-S app/**
-S tests/**
-B _build/**

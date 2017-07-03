@@ -8,12 +8,12 @@ dev-repo:     "https://github.com/mirage/prometheus.git"
 doc:          "https://mirage.github.io/prometheus/"
 
 build: [
-  [ "jbuilder" "build" "--only-packages=prometheus" ]
+  [ "jbuilder" "subst" ] {pinned}
+  [ "jbuilder" "build" "-p" name "-j" jobs ]
 ]
 
 depends: [
-  "ocamlfind" {build}
-  "jbuilder"  {build}
+  "jbuilder"  {build & >="1.0+beta10"}
   "astring"
   "asetmap"
   "fmt"
