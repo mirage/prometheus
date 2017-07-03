@@ -13,6 +13,7 @@ build: [
 
 depends: [
   "ocamlfind" {build}
+  "jbuilder"  {build}
   "astring"
   "asetmap"
   "fmt"
