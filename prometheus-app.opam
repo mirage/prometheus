@@ -8,20 +8,20 @@ dev-repo:     "https://github.com/mirage/prometheus.git"
 doc:          "https://mirage.github.io/prometheus/"
 
 build: [
-  [ "jbuilder" "build" "--only-packages=prometheus,prometheus-app" ]
+  [ "jbuilder" "subst" ] {pinned}
+  [ "jbuilder" "build" "-p" name "-j" jobs ]
 ]
 
 build-test: [
-  [ "jbuilder" "runtest" ]
+  [ "jbuilder" "runtest" "-p" name "-j" jobs ]
 ]
 
 depends: [
-  "ocamlfind" {build}
-  "jbuilder"  {build}
+  "jbuilder"  {build & >="1.0+beta10"}
   "prometheus"
   "fmt"
   "re"
-  "cohttp" {>="0.20.0"}
+  "cohttp" {>="0.20.0" & <"0.99"}
   "lwt" {>="2.5.0"}
   "alcotest" {test}
 ]
