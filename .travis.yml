@@ -4,11 +4,11 @@ install: wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.t
 script: bash -ex .travis-opam.sh
 env:
   global:
-    - PINS="prometheus:."
-    - PACKAGE=prometheus-app
+    - PINS="prometheus:. prometheus-app:."
   matrix:
-    - OCAML_VERSION=4.02
-    - OCAML_VERSION=4.03
-    - OCAML_VERSION=4.04
+    - OCAML_VERSION=4.02 PACKAGE="prometheus"
+    - OCAML_VERSION=4.03 PACKAGE="prometheus-app"
+    - OCAML_VERSION=4.04 PACKAGE="prometheus-app"
+    - OCAML_VERSION=4.05 PACKAGE="prometheus-app"
 os:
   - linux

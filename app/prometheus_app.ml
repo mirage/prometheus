@@ -132,7 +132,7 @@ module Runtime = struct
 end
 
 
-module Cohttp(Server : Cohttp_lwt.Server) = struct
+module Cohttp(Server : Cohttp_lwt.S.Server) = struct
   let callback _conn req _body =
     let open Cohttp in
     let uri = Request.uri req in
