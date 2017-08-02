@@ -21,8 +21,11 @@ depends: [
   "prometheus"
   "fmt"
   "re"
-  "cohttp" {>="0.20.0" & <"0.99"}
+  "cohttp" {>="0.99.0"}
+  "cohttp-lwt"
+  "cohttp-lwt-unix"
   "lwt" {>="2.5.0"}
+  "cmdliner"
   "alcotest" {test}
 ]
 available: [ocaml-version >= "4.02.3"]

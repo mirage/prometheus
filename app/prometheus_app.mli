@@ -17,9 +17,9 @@ module TextFormat_0_0_4 : sig
 end
 (** Format a snapshot in Prometheus's text format, version 0.0.4. *)
 
-module Cohttp (S : Cohttp_lwt.Server) : sig
+module Cohttp (S : Cohttp_lwt.S.Server) : sig
   val callback :
-    Cohttp_lwt_unix.Server.conn ->
+    S.conn ->
     Cohttp.Request.t ->
     Cohttp_lwt_body.t -> (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
 end
