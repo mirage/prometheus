@@ -177,6 +177,8 @@ module Counter = struct
   let inc t v =
     assert (v >= 0.0);
     t := !t +. v
+
+  let get t = !t
 end
 
 module Gauge = struct
@@ -196,6 +198,8 @@ module Gauge = struct
 
   let set t v =
     t := v
+
+  let get t = !t
 
   let track_inprogress t fn =
     inc_one t;
@@ -226,6 +230,13 @@ module Summary = struct
     let metric_type = Summary
   end
   include Metric(Child)
+
+  let get t =
+    Child.(t.sum, t.count)
+
+  let get_average t =
+    let sum, count = get t in
+    sum /. count
 
   let observe t v =
     let open Child in

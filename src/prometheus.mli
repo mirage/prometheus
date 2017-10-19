@@ -113,6 +113,9 @@ module Counter : sig
   val inc_one : t -> unit
   val inc : t -> float -> unit
   (** [inc t v] increases [t] by [v], which must be non-negative. *)
+
+  val get : t -> float
+  (** [get t] returns the current value of the counter. *)
 end
 (** A counter is a cumulative metric that represents a single numerical value that only ever goes up. *)
 
@@ -137,6 +140,9 @@ module Gauge : sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       increases the metric by the difference.
   *)
+
+  val get : t -> float
+  (** [get t] returns the current value of the gauge. *)
 end
 (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
 
@@ -149,6 +155,12 @@ module Summary : sig
   val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
+
+  val get : t -> float * float
+  (** [get t] returns the sum and count of the summary. *)
+
+  val get_average : t -> float
+  (** [get_average t] returns the average of the counter. *)
 end
 (** A summary is a metric that records both the number of readings and their total.
     This allows calculating the average. *)
