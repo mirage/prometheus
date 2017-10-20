@@ -55,6 +55,7 @@ module Sample_set : sig
   type sample = {
     ext : string;               (** An extension to append to the base metric name. *)
     value : float;
+    bucket : (LabelName.t * float) option;   (** The "le" or "quantile" label and value, if any. *)
   }
 
   type t = sample list
@@ -64,7 +65,7 @@ module Sample_set : sig
       For example, a "summary" sample set contains "_sum" and "_count" values.
    *)
 
-  val sample : ?ext:string -> float -> sample
+  val sample : ?ext:string -> ?bucket:(LabelName.t * float) -> float -> sample
 end
 
 module CollectorRegistry : sig

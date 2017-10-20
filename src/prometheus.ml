@@ -83,11 +83,12 @@ module Sample_set = struct
   type sample = {
     ext : string;
     value : float;
+    bucket : (LabelName.t * float) option;
   }
 
   type t = sample list
 
-  let sample ?(ext="") value = { ext; value }
+  let sample ?(ext="") ?bucket value = { ext; value; bucket }
 end
 
 module CollectorRegistry = struct
