@@ -81,11 +81,11 @@ module MetricFamilyMap = Map.Make(MetricInfo)
 
 module CollectorRegistry = struct
   type t = {
-    mutable metrics : (unit -> (string * float) list LabelSetMap.t) MetricFamilyMap.t;
+    mutable metrics : (unit -> (string * float * ((LabelName.t * float) option)) list LabelSetMap.t) MetricFamilyMap.t;
     mutable pre_collect : (unit -> unit) list;
   }
 
-  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
+  type snapshot = (string * float * ((LabelName.t * float) option)) list LabelSetMap.t MetricFamilyMap.t
 
   let create () = {
     metrics = MetricFamilyMap.empty;
@@ -118,7 +118,7 @@ end
 module type CHILD = sig
   type t
   val create : unit -> t
-  val values : t -> (string * float) list       (* extension, value *)
+  val values : t -> (string * float * ((LabelName.t * float) option)) list       (* extension, value, (extra label name, extra label value) *)
   val metric_type : metric_type
 end
 
@@ -167,7 +167,7 @@ module Counter = struct
   include Metric(struct
       type t = float ref
       let create () = ref 0.0
-      let values t = ["", !t]
+      let values t = [("", !t, None)]
       let metric_type = Counter
     end)
 
@@ -185,7 +185,7 @@ module Gauge = struct
   include Metric(struct
       type t = float ref
       let create () = ref 0.0
-      let values t = ["", !t]
+      let values t = [("", !t, None)]
       let metric_type = Gauge
     end)
 
@@ -224,8 +224,8 @@ module Summary = struct
     let create () = { count = 0.0; sum = 0.0 }
     let values t =
       [
-        "_sum", t.sum;
-        "_count", t.count;
+        "_sum", t.sum, None;
+        "_count", t.count, None;
       ]
     let metric_type = Summary
   end

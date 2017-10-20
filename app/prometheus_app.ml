@@ -46,7 +46,13 @@ module TextFormat_0_0_4 = struct
     | [] -> ()
     | label_values -> Fmt.pf f "{%a}" output_pairs (label_names, label_values)
 
-  let output_sample ~base ~label_names ~label_values f (ext, sample) =
+  let output_sample ~base ~label_names ~label_values f (ext, sample, extra_label_opt) =
+    let label_names, label_values = match extra_label_opt with
+      | None -> label_names, label_values
+      | Some (label_name, label_value) ->
+        let label_value_str = Fmt.strf "%a" output_value label_value in
+        label_name :: label_names, label_value_str :: label_values
+    in
     Fmt.pf f "%a%s%a %a@."
       MetricName.pp base ext
       (output_labels ~label_names) label_values
@@ -83,7 +89,7 @@ module Runtime = struct
     }
     in
     let collect () =
-      LabelSetMap.singleton [] ["", fn ()]
+      LabelSetMap.singleton [] ["", fn (), None]
     in
     info, collect
 

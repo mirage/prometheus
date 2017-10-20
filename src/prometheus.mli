@@ -55,7 +55,7 @@ module CollectorRegistry : sig
   type t
   (** A collection of metrics to be monitored. *)
 
-  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
+  type snapshot = (string * float * ((LabelName.t * float) option)) list LabelSetMap.t MetricFamilyMap.t
   (** The result of reading a set of metrics. *)
 
   val create : unit -> t
@@ -67,7 +67,7 @@ module CollectorRegistry : sig
   val collect : t -> snapshot
   (** Read the current value of each metric. *)
 
-  val register : t -> MetricInfo.t -> (unit -> (string * float) list LabelSetMap.t) -> unit
+  val register : t -> MetricInfo.t -> (unit -> (string * float * ((LabelName.t * float) option)) list LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)
 
