@@ -132,6 +132,7 @@ module type CHILD = sig
   val create : unit -> t
   val values : t -> Sample_set.t
   val metric_type : metric_type
+  val validate_label : string -> unit
 end
 
 module Metric(Child : CHILD) : sig
@@ -148,6 +149,7 @@ end = struct
     LabelSetMap.map Child.values t.children
 
   let v_labels ~label_names ?(registry=CollectorRegistry.default) ~help ?namespace ?subsystem name =
+    List.iter Child.validate_label label_names;
     let label_names = List.map LabelName.v label_names in
     let metric = MetricInfo.v ~metric_type:Child.metric_type ~help ~label_names ?namespace ?subsystem name in
     let t = {
@@ -181,6 +183,7 @@ module Counter = struct
       let create () = ref 0.0
       let values t = [Sample_set.sample !t]
       let metric_type = Counter
+      let validate_label _ = ()
     end)
 
   let inc_one t =
@@ -197,6 +200,7 @@ module Gauge = struct
       let create () = ref 0.0
       let values t = [Sample_set.sample !t]
       let metric_type = Gauge
+      let validate_label _ = ()
     end)
 
   let inc t v =
@@ -236,6 +240,10 @@ module Summary = struct
         Sample_set.sample ~ext:"_count" t.count;
       ]
     let metric_type = Summary
+
+    let validate_label = function
+      | "quantile" -> failwith "Can't use special label 'quantile' in summary"
+      | _ -> ()
   end
   include Metric(Child)
 
