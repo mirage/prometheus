@@ -120,6 +120,7 @@ module type CHILD = sig
   val create : unit -> t
   val values : t -> (string * float * ((LabelName.t * float) option)) list       (* extension, value, (extra label name, extra label value) *)
   val metric_type : metric_type
+  val is_valid_label : string -> bool
 end
 
 module Metric(Child : CHILD) : sig
@@ -136,6 +137,8 @@ end = struct
     LabelSetMap.map Child.values t.children
 
   let v_labels ~label_names ?(registry=CollectorRegistry.default) ~help ?namespace ?subsystem name =
+    if List.exists (fun name -> not (Child.is_valid_label name)) label_names then
+      failwith (Fmt.strf "Invalid name %S" name);
     let label_names = List.map LabelName.v label_names in
     let metric = MetricInfo.v ~metric_type:Child.metric_type ~help ~label_names ?namespace ?subsystem name in
     let t = {
@@ -169,6 +172,7 @@ module Counter = struct
       let create () = ref 0.0
       let values t = [("", !t, None)]
       let metric_type = Counter
+      let is_valid_label _str = true
     end)
 
   let inc_one t =
@@ -187,6 +191,7 @@ module Gauge = struct
       let create () = ref 0.0
       let values t = [("", !t, None)]
       let metric_type = Gauge
+      let is_valid_label _str = true
     end)
 
   let inc t v =
@@ -228,6 +233,7 @@ module Summary = struct
         "_count", t.count, None;
       ]
     let metric_type = Summary
+    let is_valid_label str = not (String.is_prefix ~affix:"quantile" str)
   end
   include Metric(Child)
 
