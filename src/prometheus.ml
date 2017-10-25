@@ -43,9 +43,7 @@ type metric_type =
   | Counter
   | Gauge
   | Summary
-(*
   | Histogram
-*)
 
 module LabelSet = struct
   type t = string list
@@ -258,3 +256,145 @@ module Summary = struct
          Lwt.return_unit
       )
 end
+
+type histogram = {
+    upper_bounds: float array;
+    counts: float array;
+    mutable sum: float;
+  }
+
+let _histogram at_index_f count =
+  let real_at_index i =
+    if i >= count then
+      infinity
+    else
+      at_index_f i
+  in
+  let upper_bounds = (Array.create_float (count + 1)) in
+  let counts = (Array.create_float (count + 1)) in
+  let rec fill index =
+    if index >= (count + 1) then
+      ()
+    else
+      let value = real_at_index index in
+      let () = Array.set upper_bounds index value in
+      let () = Array.set counts index 0. in
+      fill (index + 1)
+  in
+  let () = fill 0 in
+  { upper_bounds; counts; sum=0.; }
+
+let histogram_of_linear start interval count =
+  let at_index i =
+    let f = float_of_int i in
+    start +. (interval *. f)
+  in
+  _histogram at_index count
+
+let histogram_of_exponential start factor count =
+  let at_index i =
+    let f = float_of_int i in
+    let multiplier = factor ** (f +. 1.) in
+    start *. multiplier
+  in
+  _histogram at_index count
+
+let histogram_of_list lst =
+  let length = List.length lst in
+  _histogram (List.nth lst) length
+
+
+module type BUCKETS = sig
+  val create: unit -> histogram
+end
+
+module type HISTOGRAM = sig
+  include METRIC
+  val observe : t -> float -> unit
+  (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum.*)
+
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
+
+  val get_all : t -> (float * float) array
+  (** [get_all t] returns a list of buckets and counts. *)
+
+  val get_count : t -> float -> float
+  (** [get_count t v] returns the bucket count for the bucket that would accept v. *)
+
+  val get_sum : t -> float
+  (** [get_sum t] returns the sum of all observed values. *)
+end
+
+let bucket_label = LabelName.v "le"
+
+module Histogram (Buckets: BUCKETS) = struct
+  module Child = struct
+    type t = histogram
+
+    let create = Buckets.create
+
+    let values t =
+      let count = Array.length t.counts in
+      let rec fold val_acc acc index =
+        if index = count then
+          ("_sum", t.sum, None) :: ("_count", val_acc, None) :: acc
+        else
+          let val_acc = t.counts.(index) +. val_acc in
+          let label = Some (bucket_label, t.upper_bounds.(index)) in
+          let acc = ("_bucket", val_acc, label) :: acc in
+          fold val_acc acc (index + 1)
+      in
+      fold 0. [] 0
+
+    let metric_type = Histogram
+    let is_valid_label str = not (String.is_prefix ~affix:"le" str)
+  end
+  include Metric(Child)
+
+  let observe t v =
+    let rec impl index =
+      if v <= t.upper_bounds.(index) then
+        t.counts.(index) <- t.counts.(index) +. 1.
+      else
+        impl (index + 1)
+    in
+    let () = impl 0 in
+    t.sum <- t.sum +. v
+
+  let time t gettimeofday fn =
+    let start = gettimeofday () in
+    Lwt.finalize fn
+      (fun () ->
+         let finish = gettimeofday () in
+         observe t (finish -. start);
+         Lwt.return_unit
+      )
+
+  let get_all t =
+    Array.map2 (fun upper_bound value -> (upper_bound, value)) t.upper_bounds t.counts
+
+  let get_count t v =
+    let rec impl index =
+      if v <= t.upper_bounds.(index) then
+        t.counts.(index)
+      else
+        impl (index + 1)
+    in
+    impl 0
+
+  let get_sum t =
+    t.sum
+end
+
+module DefaultHistogram = Histogram (
+  struct
+    let create () =
+      histogram_of_list [0.005;  0.01; 0.025; 0.05;
+                         0.075;  0.1 ; 0.25 ; 0.5;
+                         0.75 ;  1.  ; 2.5  ; 5.;
+                         7.5  ; 10.  ]
+
+  end)
+

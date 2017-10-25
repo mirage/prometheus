@@ -16,6 +16,7 @@ type metric_type =
   | Counter
   | Gauge
   | Summary
+  | Histogram
 
 module type NAME = sig
   type t = private string
@@ -164,3 +165,49 @@ module Summary : sig
 end
 (** A summary is a metric that records both the number of readings and their total.
     This allows calculating the average. *)
+
+type histogram
+
+val histogram_of_linear:  float -> float -> int -> histogram
+(** [histogram_of_linear start interval count] will return a histogram type with
+    [count] buckets with values starting at [start] and [interval] apart:
+    [(start, start+interval, start + (2 * interval), ... start + ((count-1) * interval), infinity)].
+    [count] does not include the infinity bucket.
+*)
+
+val histogram_of_exponential : float -> float -> int -> histogram
+(** [histogram_of_exponential start factor count] will return a histogram type with
+    [count] buckets with values starting at [start] and every next item [previous*factor].
+    [count] does not include the infinity bucket.
+*)
+
+val histogram_of_list: float list -> histogram
+(** [histogram_of_list [0.5; 1.]] will return a histogram with buckets [0.5;1.;infinity] *)
+
+module type BUCKETS = sig
+  val create: unit -> histogram
+end
+
+module type HISTOGRAM = sig
+  include METRIC
+  val observe : t -> float -> unit
+  (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum.*)
+
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
+
+  val get_all : t -> (float * float) array
+  (** [get_all t] returns a list of buckets and counts. *)
+
+  val get_count : t -> float -> float
+  (** [get_count t v] returns the bucket count for the bucket that would accept v. *)
+
+  val get_sum : t -> float
+  (** [get_sum t] returns the sum of all observed values. *)
+end
+
+module Histogram (Buckets : BUCKETS) : HISTOGRAM
+
+module DefaultHistogram : HISTOGRAM
+
