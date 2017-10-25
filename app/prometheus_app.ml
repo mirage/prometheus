@@ -18,7 +18,7 @@ module TextFormat_0_0_4 = struct
     | Counter   -> Fmt.string f "counter"
     | Gauge     -> Fmt.string f "gauge"
     | Summary   -> Fmt.string f "summary"
-  (* | Histogram -> Fmt.string f "histogram" *)
+    | Histogram -> Fmt.string f "histogram"
 
   let output_unquoted f s =
     Fmt.string f @@ Re.replace re_unquoted_escapes ~f:quote s

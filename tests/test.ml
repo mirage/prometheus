@@ -27,6 +27,37 @@ let test_metrics () =
     "
     output
 
+module Buckets = struct
+  let spec = Histogram_spec.of_list [0.25; 0.5]
+end
+
+module H = Histogram (Buckets)
+
+let test_histogram () =
+  let registry = CollectorRegistry.create () in
+  let requests =
+    let label_names = ["method"; "path"] in
+    H.v_labels ~label_names ~registry ~help:"Requests" ~namespace:"dkci" ~subsystem:"tests" "requests" in
+  let foo = H.labels requests ["GET"; "/foo"] in
+  let bar = H.labels requests ["PUT"; "/bar"] in
+  H.observe foo 0.12;
+  H.observe bar 0.33;
+  let output = Fmt.to_to_string TextFormat_0_0_4.output (CollectorRegistry.collect registry) in
+  Alcotest.(check string) "Text output"
+    "#HELP dkci_tests_requests Requests\n\
+     #TYPE dkci_tests_requests histogram\n\
+     dkci_tests_requests_sum{method=\"GET\", path=\"/foo\"} 0.12\n\
+     dkci_tests_requests_count{method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_bucket{le=\"+Inf\", method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.5\", method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.25\", method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_sum{method=\"PUT\", path=\"/bar\"} 0.33\n\
+     dkci_tests_requests_count{method=\"PUT\", path=\"/bar\"} 1\n\
+     dkci_tests_requests_bucket{le=\"+Inf\", method=\"PUT\", path=\"/bar\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.5\", method=\"PUT\", path=\"/bar\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.25\", method=\"PUT\", path=\"/bar\"} 0\n\
+    "
+    output
 
 (* "^[a-zA-Z_][a-zA-Z0-9_]*$" *)
 let valid_labels = [
@@ -100,6 +131,7 @@ let test_invalid_metrics_set = List.map (fun metric ->
 
 let test_set = [
   "Metrics", `Quick, test_metrics;
+  "Histogram", `Quick, test_histogram;
 ]
 
 let () =

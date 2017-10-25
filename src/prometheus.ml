@@ -43,9 +43,7 @@ type metric_type =
   | Counter
   | Gauge
   | Summary
-(*
   | Histogram
-*)
 
 module LabelSet = struct
   type t = string list
@@ -261,3 +259,116 @@ module Summary = struct
          Lwt.return_unit
       )
 end
+
+module Histogram_spec = struct
+  type t = float array (* Upper bounds *)
+
+  let make at_index_f count =
+    let real_at_index i =
+      if i >= count then
+        infinity
+      else
+        at_index_f i
+    in
+    Array.init (count + 1) real_at_index
+
+  let of_linear start interval count =
+    let at_index i =
+      let f = float_of_int i in
+      start +. (interval *. f)
+    in
+    make at_index count
+
+  let of_exponential start factor count =
+    let at_index i =
+      let multiplier = factor ** (float_of_int i) in
+      start *. multiplier
+    in
+    make at_index count
+
+  let of_list lst =
+    let length = List.length lst in
+    make (List.nth lst) length
+
+  (* The index at which to record a value [v]. *)
+  let index t v =
+    let rec aux index =
+      if v <= t.(index) then index
+      else aux (index + 1)
+    in
+    aux 0
+end
+
+module type BUCKETS = sig
+  val spec : Histogram_spec.t
+end
+
+module type HISTOGRAM = sig
+  include METRIC
+  val observe : t -> float -> unit
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+end
+
+let bucket_label = LabelName.v "le"
+
+module Histogram (Buckets : BUCKETS) = struct
+  module Child = struct
+    type t = {
+      upper_bounds : Histogram_spec.t;
+      counts : float array;
+      mutable sum : float;
+    }
+
+    let create () =
+      let count = Array.length Buckets.spec in
+      let counts = Array.make count 0. in
+      { upper_bounds = Buckets.spec; counts; sum = 0. }
+
+    let values t =
+      let count = Array.length t.counts in
+      let rec fold val_acc acc index =
+        if index = count then
+          Sample_set.sample ~ext:"_sum" t.sum ::
+          Sample_set.sample ~ext:"_count" val_acc ::
+          acc
+        else
+          let val_acc = t.counts.(index) +. val_acc in
+          let bucket = (bucket_label, t.upper_bounds.(index)) in
+          let acc = Sample_set.sample ~ext:"_bucket" val_acc ~bucket :: acc in
+          fold val_acc acc (index + 1)
+      in
+      fold 0. [] 0
+
+    let metric_type = Histogram
+
+    let validate_label = function
+      | "le" -> failwith "Can't use special label 'le' in histogram"
+      | _ -> ()
+  end
+
+  include Metric(Child)
+
+  let observe t v =
+    let open Child in
+    let index = Histogram_spec.index t.upper_bounds v in
+    t.counts.(index) <- t.counts.(index) +. 1.;
+    t.sum <- t.sum +. v
+
+  let time t gettimeofday fn =
+    let start = gettimeofday () in
+    Lwt.finalize fn
+      (fun () ->
+         let finish = gettimeofday () in
+         observe t (finish -. start);
+         Lwt.return_unit
+      )
+end
+
+module DefaultHistogram = Histogram (
+  struct
+    let spec =
+      Histogram_spec.of_list [0.005;  0.01; 0.025; 0.05;
+                              0.075;  0.1 ; 0.25 ; 0.5;
+                              0.75 ;  1.  ; 2.5  ; 5.;
+                              7.5  ; 10.  ]
+  end)
