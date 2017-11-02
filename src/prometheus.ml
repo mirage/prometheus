@@ -263,25 +263,15 @@ type histogram = {
     mutable sum: float;
   }
 
-let _histogram at_index_f count =
+let histogram at_index_f count =
   let real_at_index i =
     if i >= count then
       infinity
     else
       at_index_f i
   in
-  let upper_bounds = (Array.create_float (count + 1)) in
-  let counts = (Array.create_float (count + 1)) in
-  let rec fill index =
-    if index >= (count + 1) then
-      ()
-    else
-      let value = real_at_index index in
-      let () = Array.set upper_bounds index value in
-      let () = Array.set counts index 0. in
-      fill (index + 1)
-  in
-  let () = fill 0 in
+  let upper_bounds = Array.init (count + 1) real_at_index in
+  let counts = Array.make (count + 1) 0. in
   { upper_bounds; counts; sum=0.; }
 
 let histogram_of_linear start interval count =
@@ -289,7 +279,7 @@ let histogram_of_linear start interval count =
     let f = float_of_int i in
     start +. (interval *. f)
   in
-  _histogram at_index count
+  histogram at_index count
 
 let histogram_of_exponential start factor count =
   let at_index i =
@@ -297,11 +287,11 @@ let histogram_of_exponential start factor count =
     let multiplier = factor ** (f +. 1.) in
     start *. multiplier
   in
-  _histogram at_index count
+  histogram at_index count
 
 let histogram_of_list lst =
   let length = List.length lst in
-  _histogram (List.nth lst) length
+  histogram (List.nth lst) length
 
 
 module type BUCKETS = sig
