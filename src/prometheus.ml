@@ -363,7 +363,12 @@ module Histogram (Buckets: BUCKETS) = struct
       )
 
   let get_all t =
-    Array.map2 (fun upper_bound value -> (upper_bound, value)) t.upper_bounds t.counts
+    Array.mapi
+      (fun index upper_bound ->
+        let value = Array.get t.counts index in
+        (upper_bound, value)
+      )
+      t.upper_bounds
 
   let get_count t v =
     let rec impl index =
