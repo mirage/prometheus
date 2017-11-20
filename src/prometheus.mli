@@ -16,6 +16,7 @@ type metric_type =
   | Counter
   | Gauge
   | Summary
+  | Histogram
 
 module type NAME = sig
   type t = private string
@@ -55,7 +56,7 @@ module CollectorRegistry : sig
   type t
   (** A collection of metrics to be monitored. *)
 
-  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
+  type snapshot = (string * float * ((LabelName.t * float) option)) list LabelSetMap.t MetricFamilyMap.t
   (** The result of reading a set of metrics. *)
 
   val create : unit -> t
@@ -67,7 +68,7 @@ module CollectorRegistry : sig
   val collect : t -> snapshot
   (** Read the current value of each metric. *)
 
-  val register : t -> MetricInfo.t -> (unit -> (string * float) list LabelSetMap.t) -> unit
+  val register : t -> MetricInfo.t -> (unit -> (string * float * ((LabelName.t * float) option)) list LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)
 
@@ -113,6 +114,9 @@ module Counter : sig
   val inc_one : t -> unit
   val inc : t -> float -> unit
   (** [inc t v] increases [t] by [v], which must be non-negative. *)
+
+  val get : t -> float
+  (** [get t] returns the current value of the counter. *)
 end
 (** A counter is a cumulative metric that represents a single numerical value that only ever goes up. *)
 
@@ -137,6 +141,9 @@ module Gauge : sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       increases the metric by the difference.
   *)
+
+  val get : t -> float
+  (** [get t] returns the current value of the gauge. *)
 end
 (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
 
@@ -149,6 +156,58 @@ module Summary : sig
   val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
+
+  val get : t -> float * float
+  (** [get t] returns the sum and count of the summary. *)
+
+  val get_average : t -> float
+  (** [get_average t] returns the average of the counter. *)
 end
 (** A summary is a metric that records both the number of readings and their total.
     This allows calculating the average. *)
+
+type histogram
+
+val histogram_of_linear:  float -> float -> int -> histogram
+(** [histogram_of_linear start interval count] will return a histogram type with
+    [count] buckets with values starting at [start] and [interval] apart:
+    [(start, start+interval, start + (2 * interval), ... start + ((count-1) * interval), infinity)].
+    [count] does not include the infinity bucket.
+*)
+
+val histogram_of_exponential : float -> float -> int -> histogram
+(** [histogram_of_exponential start factor count] will return a histogram type with
+    [count] buckets with values starting at [start] and every next item [previous*factor].
+    [count] does not include the infinity bucket.
+*)
+
+val histogram_of_list: float list -> histogram
+(** [histogram_of_list [0.5; 1.]] will return a histogram with buckets [0.5;1.;infinity] *)
+
+module type BUCKETS = sig
+  val create: unit -> histogram
+end
+
+module type HISTOGRAM = sig
+  include METRIC
+  val observe : t -> float -> unit
+  (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum.*)
+
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
+
+  val get_all : t -> (float * float) array
+  (** [get_all t] returns a list of buckets and counts. *)
+
+  val get_count : t -> float -> float
+  (** [get_count t v] returns the bucket count for the bucket that would accept v. *)
+
+  val get_sum : t -> float
+  (** [get_sum t] returns the sum of all observed values. *)
+end
+
+module Histogram (Buckets : BUCKETS) : HISTOGRAM
+
+module DefaultHistogram : HISTOGRAM
+

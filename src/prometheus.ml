@@ -43,9 +43,7 @@ type metric_type =
   | Counter
   | Gauge
   | Summary
-(*
   | Histogram
-*)
 
 module LabelSet = struct
   type t = string list
@@ -81,11 +79,11 @@ module MetricFamilyMap = Map.Make(MetricInfo)
 
 module CollectorRegistry = struct
   type t = {
-    mutable metrics : (unit -> (string * float) list LabelSetMap.t) MetricFamilyMap.t;
+    mutable metrics : (unit -> (string * float * ((LabelName.t * float) option)) list LabelSetMap.t) MetricFamilyMap.t;
     mutable pre_collect : (unit -> unit) list;
   }
 
-  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
+  type snapshot = (string * float * ((LabelName.t * float) option)) list LabelSetMap.t MetricFamilyMap.t
 
   let create () = {
     metrics = MetricFamilyMap.empty;
@@ -118,8 +116,9 @@ end
 module type CHILD = sig
   type t
   val create : unit -> t
-  val values : t -> (string * float) list       (* extension, value *)
+  val values : t -> (string * float * ((LabelName.t * float) option)) list       (* extension, value, (extra label name, extra label value) *)
   val metric_type : metric_type
+  val is_valid_label : string -> bool
 end
 
 module Metric(Child : CHILD) : sig
@@ -136,6 +135,8 @@ end = struct
     LabelSetMap.map Child.values t.children
 
   let v_labels ~label_names ?(registry=CollectorRegistry.default) ~help ?namespace ?subsystem name =
+    if List.exists (fun name -> not (Child.is_valid_label name)) label_names then
+      failwith (Fmt.strf "Invalid name %S" name);
     let label_names = List.map LabelName.v label_names in
     let metric = MetricInfo.v ~metric_type:Child.metric_type ~help ~label_names ?namespace ?subsystem name in
     let t = {
@@ -167,8 +168,9 @@ module Counter = struct
   include Metric(struct
       type t = float ref
       let create () = ref 0.0
-      let values t = ["", !t]
+      let values t = [("", !t, None)]
       let metric_type = Counter
+      let is_valid_label _str = true
     end)
 
   let inc_one t =
@@ -177,14 +179,17 @@ module Counter = struct
   let inc t v =
     assert (v >= 0.0);
     t := !t +. v
+
+  let get t = !t
 end
 
 module Gauge = struct
   include Metric(struct
       type t = float ref
       let create () = ref 0.0
-      let values t = ["", !t]
+      let values t = [("", !t, None)]
       let metric_type = Gauge
+      let is_valid_label _str = true
     end)
 
   let inc t v =
@@ -196,6 +201,8 @@ module Gauge = struct
 
   let set t v =
     t := v
+
+  let get t = !t
 
   let track_inprogress t fn =
     inc_one t;
@@ -220,12 +227,20 @@ module Summary = struct
     let create () = { count = 0.0; sum = 0.0 }
     let values t =
       [
-        "_sum", t.sum;
-        "_count", t.count;
+        "_sum", t.sum, None;
+        "_count", t.count, None;
       ]
     let metric_type = Summary
+    let is_valid_label str = not (String.is_prefix ~affix:"quantile" str)
   end
   include Metric(Child)
+
+  let get t =
+    Child.(t.sum, t.count)
+
+  let get_average t =
+    let sum, count = get t in
+    sum /. count
 
   let observe t v =
     let open Child in
@@ -241,3 +256,140 @@ module Summary = struct
          Lwt.return_unit
       )
 end
+
+type histogram = {
+    upper_bounds: float array;
+    counts: float array;
+    mutable sum: float;
+  }
+
+let histogram at_index_f count =
+  let real_at_index i =
+    if i >= count then
+      infinity
+    else
+      at_index_f i
+  in
+  let upper_bounds = Array.init (count + 1) real_at_index in
+  let counts = Array.make (count + 1) 0. in
+  { upper_bounds; counts; sum=0.; }
+
+let histogram_of_linear start interval count =
+  let at_index i =
+    let f = float_of_int i in
+    start +. (interval *. f)
+  in
+  histogram at_index count
+
+let histogram_of_exponential start factor count =
+  let at_index i =
+    let f = float_of_int i in
+    let multiplier = factor ** (f +. 1.) in
+    start *. multiplier
+  in
+  histogram at_index count
+
+let histogram_of_list lst =
+  let length = List.length lst in
+  histogram (List.nth lst) length
+
+
+module type BUCKETS = sig
+  val create: unit -> histogram
+end
+
+module type HISTOGRAM = sig
+  include METRIC
+  val observe : t -> float -> unit
+  (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum.*)
+
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
+
+  val get_all : t -> (float * float) array
+  (** [get_all t] returns a list of buckets and counts. *)
+
+  val get_count : t -> float -> float
+  (** [get_count t v] returns the bucket count for the bucket that would accept v. *)
+
+  val get_sum : t -> float
+  (** [get_sum t] returns the sum of all observed values. *)
+end
+
+let bucket_label = LabelName.v "le"
+
+module Histogram (Buckets: BUCKETS) = struct
+  module Child = struct
+    type t = histogram
+
+    let create = Buckets.create
+
+    let values t =
+      let count = Array.length t.counts in
+      let rec fold val_acc acc index =
+        if index = count then
+          ("_sum", t.sum, None) :: ("_count", val_acc, None) :: acc
+        else
+          let val_acc = t.counts.(index) +. val_acc in
+          let label = Some (bucket_label, t.upper_bounds.(index)) in
+          let acc = ("_bucket", val_acc, label) :: acc in
+          fold val_acc acc (index + 1)
+      in
+      fold 0. [] 0
+
+    let metric_type = Histogram
+    let is_valid_label str = not (String.is_prefix ~affix:"le" str)
+  end
+  include Metric(Child)
+
+  let observe t v =
+    let rec impl index =
+      if v <= t.upper_bounds.(index) then
+        t.counts.(index) <- t.counts.(index) +. 1.
+      else
+        impl (index + 1)
+    in
+    let () = impl 0 in
+    t.sum <- t.sum +. v
+
+  let time t gettimeofday fn =
+    let start = gettimeofday () in
+    Lwt.finalize fn
+      (fun () ->
+         let finish = gettimeofday () in
+         observe t (finish -. start);
+         Lwt.return_unit
+      )
+
+  let get_all t =
+    Array.mapi
+      (fun index upper_bound ->
+        let value = Array.get t.counts index in
+        (upper_bound, value)
+      )
+      t.upper_bounds
+
+  let get_count t v =
+    let rec impl index =
+      if v <= t.upper_bounds.(index) then
+        t.counts.(index)
+      else
+        impl (index + 1)
+    in
+    impl 0
+
+  let get_sum t =
+    t.sum
+end
+
+module DefaultHistogram = Histogram (
+  struct
+    let create () =
+      histogram_of_list [0.005;  0.01; 0.025; 0.05;
+                         0.075;  0.1 ; 0.25 ; 0.5;
+                         0.75 ;  1.  ; 2.5  ; 5.;
+                         7.5  ; 10.  ]
+
+  end)
+
