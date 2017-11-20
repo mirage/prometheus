@@ -236,7 +236,7 @@ module Summary = struct
     let start = gettimeofday () in
     Lwt.finalize fn
       (fun () ->
-         let finish = Unix.gettimeofday () in
+         let finish = gettimeofday () in
          observe t (finish -. start);
          Lwt.return_unit
       )
