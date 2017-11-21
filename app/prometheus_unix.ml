@@ -13,7 +13,7 @@ module Unix_runtime = struct
     }
     in
     let collect () =
-      LabelSetMap.singleton [] ["", fn ()]
+      LabelSetMap.singleton [] [Sample_set.sample (fn ())]
     in
     info, collect
 

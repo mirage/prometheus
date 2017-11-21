@@ -46,11 +46,11 @@ module TextFormat_0_0_4 = struct
     | [] -> ()
     | label_values -> Fmt.pf f "{%a}" output_pairs (label_names, label_values)
 
-  let output_sample ~base ~label_names ~label_values f (ext, sample) =
+  let output_sample ~base ~label_names ~label_values f { Sample_set.ext; value } =
     Fmt.pf f "%a%s%a %a@."
       MetricName.pp base ext
       (output_labels ~label_names) label_values
-      output_value sample
+      output_value value
 
   let output_metric ~name ~label_names f (label_values, samples) =
     List.iter (output_sample ~base:name ~label_names ~label_values f) samples
@@ -83,7 +83,7 @@ module Runtime = struct
     }
     in
     let collect () =
-      LabelSetMap.singleton [] ["", fn ()]
+      LabelSetMap.singleton [] [Sample_set.sample (fn ())]
     in
     info, collect
 

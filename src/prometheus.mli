@@ -51,11 +51,27 @@ module LabelSetMap : Map.S with type key = string list
 module MetricFamilyMap : Map.S with type key = MetricInfo.t
 (** A map indexed by metric families. *)
 
+module Sample_set : sig
+  type sample = {
+    ext : string;               (** An extension to append to the base metric name. *)
+    value : float;
+  }
+
+  type t = sample list
+  (** A collection of values that together represent a single sample.
+      For a counter, each reading is just a single value, but more complex types
+      require multiple values.
+      For example, a "summary" sample set contains "_sum" and "_count" values.
+   *)
+
+  val sample : ?ext:string -> float -> sample
+end
+
 module CollectorRegistry : sig
   type t
   (** A collection of metrics to be monitored. *)
 
-  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
+  type snapshot = Sample_set.t LabelSetMap.t MetricFamilyMap.t
   (** The result of reading a set of metrics. *)
 
   val create : unit -> t
@@ -67,7 +83,7 @@ module CollectorRegistry : sig
   val collect : t -> snapshot
   (** Read the current value of each metric. *)
 
-  val register : t -> MetricInfo.t -> (unit -> (string * float) list LabelSetMap.t) -> unit
+  val register : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)
 

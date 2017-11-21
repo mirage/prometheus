@@ -79,13 +79,24 @@ end
 
 module MetricFamilyMap = Map.Make(MetricInfo)
 
+module Sample_set = struct
+  type sample = {
+    ext : string;
+    value : float;
+  }
+
+  type t = sample list
+
+  let sample ?(ext="") value = { ext; value }
+end
+
 module CollectorRegistry = struct
   type t = {
-    mutable metrics : (unit -> (string * float) list LabelSetMap.t) MetricFamilyMap.t;
+    mutable metrics : (unit -> Sample_set.t LabelSetMap.t) MetricFamilyMap.t;
     mutable pre_collect : (unit -> unit) list;
   }
 
-  type snapshot = (string * float) list LabelSetMap.t MetricFamilyMap.t
+  type snapshot = Sample_set.t LabelSetMap.t MetricFamilyMap.t
 
   let create () = {
     metrics = MetricFamilyMap.empty;
@@ -118,7 +129,7 @@ end
 module type CHILD = sig
   type t
   val create : unit -> t
-  val values : t -> (string * float) list       (* extension, value *)
+  val values : t -> Sample_set.t
   val metric_type : metric_type
 end
 
@@ -167,7 +178,7 @@ module Counter = struct
   include Metric(struct
       type t = float ref
       let create () = ref 0.0
-      let values t = ["", !t]
+      let values t = [Sample_set.sample !t]
       let metric_type = Counter
     end)
 
@@ -183,7 +194,7 @@ module Gauge = struct
   include Metric(struct
       type t = float ref
       let create () = ref 0.0
-      let values t = ["", !t]
+      let values t = [Sample_set.sample !t]
       let metric_type = Gauge
     end)
 
@@ -220,8 +231,8 @@ module Summary = struct
     let create () = { count = 0.0; sum = 0.0 }
     let values t =
       [
-        "_sum", t.sum;
-        "_count", t.count;
+        Sample_set.sample ~ext:"_sum" t.sum;
+        Sample_set.sample ~ext:"_count" t.count;
       ]
     let metric_type = Summary
   end
