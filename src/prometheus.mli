@@ -16,6 +16,7 @@ type metric_type =
   | Counter
   | Gauge
   | Summary
+  | Histogram
 
 module type NAME = sig
   type t = private string
@@ -55,6 +56,7 @@ module Sample_set : sig
   type sample = {
     ext : string;               (** An extension to append to the base metric name. *)
     value : float;
+    bucket : (LabelName.t * float) option;   (** The "le" or "quantile" label and value, if any. *)
   }
 
   type t = sample list
@@ -64,7 +66,7 @@ module Sample_set : sig
       For example, a "summary" sample set contains "_sum" and "_count" values.
    *)
 
-  val sample : ?ext:string -> float -> sample
+  val sample : ?ext:string -> ?bucket:(LabelName.t * float) -> float -> sample
 end
 
 module CollectorRegistry : sig
@@ -168,3 +170,39 @@ module Summary : sig
 end
 (** A summary is a metric that records both the number of readings and their total.
     This allows calculating the average. *)
+
+module Histogram_spec : sig
+  type t
+
+  val of_linear : float -> float -> int -> t
+  (** [of_linear start interval count] will return a histogram type with
+      [count] buckets with values starting at [start] and [interval] apart:
+      [(start, start+interval, start + (2 * interval), ... start + ((count-1) * interval), infinity)].
+      [count] does not include the infinity bucket.
+  *)
+
+  val of_exponential : float -> float -> int -> t
+  (** [of_exponential start factor count] will return a histogram type with
+      [count] buckets with values starting at [start] and every next item [previous*factor].
+      [count] does not include the infinity bucket.
+  *)
+
+  val of_list : float list -> t
+  (** [of_list [0.5; 1.]] will return a histogram with buckets [0.5;1.;infinity]. *)
+end
+
+module type HISTOGRAM = sig
+  include METRIC
+
+  val observe : t -> float -> unit
+  (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum. *)
+
+  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
+end
+
+module Histogram (Buckets : sig val spec : Histogram_spec.t end) : HISTOGRAM
+
+module DefaultHistogram : HISTOGRAM
+(** A histogram configured with reasonable defaults for measuring network request times in seconds. *)

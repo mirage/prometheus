@@ -18,7 +18,7 @@ module TextFormat_0_0_4 = struct
     | Counter   -> Fmt.string f "counter"
     | Gauge     -> Fmt.string f "gauge"
     | Summary   -> Fmt.string f "summary"
-  (* | Histogram -> Fmt.string f "histogram" *)
+    | Histogram -> Fmt.string f "histogram"
 
   let output_unquoted f s =
     Fmt.string f @@ Re.replace re_unquoted_escapes ~f:quote s
@@ -46,7 +46,13 @@ module TextFormat_0_0_4 = struct
     | [] -> ()
     | label_values -> Fmt.pf f "{%a}" output_pairs (label_names, label_values)
 
-  let output_sample ~base ~label_names ~label_values f { Sample_set.ext; value } =
+  let output_sample ~base ~label_names ~label_values f { Sample_set.ext; value; bucket } =
+    let label_names, label_values = match bucket with
+      | None -> label_names, label_values
+      | Some (label_name, label_value) ->
+        let label_value_str = Fmt.strf "%a" output_value label_value in
+        label_name :: label_names, label_value_str :: label_values
+    in
     Fmt.pf f "%a%s%a %a@."
       MetricName.pp base ext
       (output_labels ~label_names) label_values
