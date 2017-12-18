@@ -21,6 +21,6 @@ module Cohttp (S : Cohttp_lwt.S.Server) : sig
   val callback :
     S.conn ->
     Cohttp.Request.t ->
-    Cohttp_lwt_body.t -> (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
+    Cohttp_lwt.Body.t -> (Cohttp.Response.t * Cohttp_lwt.Body.t) Lwt.t
 end
 (** A Cohttp callback for a web-server that exposes the Prometheus metrics. *)
