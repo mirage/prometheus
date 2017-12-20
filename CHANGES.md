@@ -1,3 +1,10 @@
+## v0.5 2017-12-20
+
+- prometheus-app: update to cohttp.1.0.0 API (#15, @djs55)
+- add support for histograms (#14, @stijn-devriendt and @talex5)
+- add `Sample_set module` to clean up the API a bit (#13, @talex5)
+- fix gettimeofday parameter not used in favor of Unix.gettimeofdaya (#12, @stijn-devriendt)
+
 ## v0.4 2017-08-02
 
 - unix: update to cohttp >= 0.99.0. Note this means the unix package
