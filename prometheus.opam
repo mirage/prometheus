@@ -1,5 +1,6 @@
 opam-version: "2.0"
-maintainer: "datakit@docker.com"
+synopsis: "Client library for Prometheus monitoring"
+maintainer: "talex5@gmail.com"
 authors: ["Thomas Leonard" "David Scott"]
 license: "Apache"
 homepage: "https://github.com/mirage/prometheus"
