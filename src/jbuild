@@ -1,6 +1,0 @@
-(library
- ((name        prometheus)
-  (public_name prometheus)
-  (libraries   (lwt astring asetmap fmt re))
-  (flags       (:standard -w "A-4-58" -strict-sequence -safe-string))
-))

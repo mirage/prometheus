@@ -1,5 +1,5 @@
 open! Astring
-open Asetmap
+open! Asetmap
 
 module type NAME_SPEC = sig
   val valid : Re.re

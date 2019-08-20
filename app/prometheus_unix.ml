@@ -39,7 +39,7 @@ let serve = function
     [thread]
 
 let listen_prometheus =
-  let open Cmdliner in
+  let open! Cmdliner in
   let doc =
     Arg.info ~docs:"MONITORING OPTIONS" ~docv:"PORT" ~doc:
       "Port on which to provide Prometheus metrics over HTTP."

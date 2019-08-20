@@ -8,16 +8,16 @@ dev-repo:     "https://github.com/mirage/prometheus.git"
 doc:          "https://mirage.github.io/prometheus/"
 
 build: [
-  [ "jbuilder" "subst" ] {pinned}
-  [ "jbuilder" "build" "-p" name "-j" jobs ]
+  [ "dune" "subst" ] {pinned}
+  [ "dune" "build" "-p" name "-j" jobs ]
 ]
 
 build-test: [
-  [ "jbuilder" "runtest" "-p" name "-j" jobs ]
+  [ "dune" "runtest" "-p" name "-j" jobs ]
 ]
 
 depends: [
-  "jbuilder"  {build & >="1.0+beta10"}
+  "dune"  {build & >= "1.0"}
   "prometheus"
   "fmt"
   "re"
