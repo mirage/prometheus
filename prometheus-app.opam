@@ -1,31 +1,27 @@
-opam-version: "1.2"
-maintainer:   "datakit@docker.com"
-authors:      ["Thomas Leonard" "David Scott"]
-license:      "Apache"
-homepage:     "https://github.com/mirage/prometheus"
-bug-reports:  "https://github.com/mirage/prometheus/issues"
-dev-repo:     "https://github.com/mirage/prometheus.git"
-doc:          "https://mirage.github.io/prometheus/"
-
-build: [
-  [ "jbuilder" "subst" ] {pinned}
-  [ "jbuilder" "build" "-p" name "-j" jobs ]
-]
-
-build-test: [
-  [ "jbuilder" "runtest" "-p" name "-j" jobs ]
-]
-
+opam-version: "2.0"
+synopsis: "Client library for Prometheus monitoring"
+maintainer: "talex5@gmail.com"
+authors: ["Thomas Leonard" "David Scott"]
+license: "Apache"
+homepage: "https://github.com/mirage/prometheus"
+doc: "https://mirage.github.io/prometheus/"
+bug-reports: "https://github.com/mirage/prometheus/issues"
 depends: [
-  "jbuilder"  {build & >="1.0+beta10"}
+  "ocaml" {>= "4.02.3"}
+  "dune" {>= "1.0"}
   "prometheus"
   "fmt"
   "re"
-  "cohttp" {>="1.0.0"}
+  "cohttp" {>= "1.0.0"}
   "cohttp-lwt"
   "cohttp-lwt-unix"
-  "lwt" {>="2.5.0"}
+  "lwt" {>= "2.5.0"}
   "cmdliner"
-  "alcotest" {test}
+  "alcotest" {with-test}
 ]
-available: [ocaml-version >= "4.02.3"]
+build: [
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/prometheus.git"

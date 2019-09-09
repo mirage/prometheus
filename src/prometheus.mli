@@ -10,8 +10,6 @@
       even though many applications will not enable it. Therefore it should have minimal dependencies.
 *)
 
-open Asetmap
-
 type metric_type =
   | Counter
   | Gauge
@@ -46,10 +44,10 @@ module MetricInfo : sig
 end
 (** Metadata about a metric. *)
 
-module LabelSetMap : Map.S with type key = string list
+module LabelSetMap : Asetmap.Map.S with type key = string list
 (** A map indexed by a set of labels. *)
 
-module MetricFamilyMap : Map.S with type key = MetricInfo.t
+module MetricFamilyMap : Asetmap.Map.S with type key = MetricInfo.t
 (** A map indexed by metric families. *)
 
 module Sample_set : sig
