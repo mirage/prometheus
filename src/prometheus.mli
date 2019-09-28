@@ -10,6 +10,8 @@
       even though many applications will not enable it. Therefore it should have minimal dependencies.
 *)
 
+open Asetmap
+
 module type NAME = sig
   type t = private string
 
@@ -42,14 +44,13 @@ module MetricInfo : sig
     | Histogram
 
   val pp_metric_type : metric_type Fmt.t
+
+  module Map : Map.S with type key = t (** A map indexed by metric families. *)
 end
 (** Metadata about a metric. *)
 
-module LabelSetMap : Asetmap.Map.S with type key = string list
+module LabelSetMap : Map.S with type key = string list
 (** A map indexed by a set of labels. *)
-
-module MetricFamilyMap : Asetmap.Map.S with type key = MetricInfo.t
-(** A map indexed by metric families. *)
 
 module Sample_set : sig
   type sample = {
@@ -72,7 +73,7 @@ module CollectorRegistry : sig
   type t
   (** A collection of metrics to be monitored. *)
 
-  type snapshot = Sample_set.t LabelSetMap.t MetricFamilyMap.t
+  type snapshot = Sample_set.t LabelSetMap.t MetricInfo.Map.t
   (** The result of reading a set of metrics. *)
 
   val pp_snapshot : snapshot Fmt.t

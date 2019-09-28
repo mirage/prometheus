@@ -46,17 +46,23 @@ end
 module LabelSetMap = Map.Make(LabelSet)
 
 module MetricInfo = struct
-  type t = {
-    name : MetricName.t;
-    metric_type : metric_type;
-    help : string;
-    label_names : LabelName.t list;
-  }
-  and metric_type =
+  module T = struct
+    type t = {
+      name : MetricName.t;
+      metric_type : metric_type;
+      help : string;
+      label_names : LabelName.t list;
+    }
+    and metric_type =
     | Counter
     | Gauge
     | Summary
     | Histogram
+
+    let compare a b = MetricName.compare a.name b.name
+  end
+  include T
+  module Map = Map.Make(T)
 
   let pp_metric_type ppf = function
     | Counter   -> Fmt.string ppf "counter"
@@ -76,11 +82,7 @@ module MetricInfo = struct
       help;
       label_names;
     }
-
-  let compare a b = MetricName.compare a.name b.name
 end
-
-module MetricFamilyMap = Map.Make(MetricInfo)
 
 module Sample_set = struct
   type sample = {
@@ -148,7 +150,7 @@ module TextFormat_0_0_4 = struct
     List.iter (output_sample ~base:name ~label_names ~label_values f) samples
 
   let output f =
-    MetricFamilyMap.iter (fun metric samples ->
+    MetricInfo.Map.iter (fun metric samples ->
         let {MetricInfo.name; metric_type; help; label_names} = metric in
         Fmt.pf f
           "#HELP %a %a@.\
@@ -162,16 +164,16 @@ end
 
 module CollectorRegistry = struct
   type t = {
-    mutable metrics : (unit -> Sample_set.t LabelSetMap.t) MetricFamilyMap.t;
+    mutable metrics : (unit -> Sample_set.t LabelSetMap.t) MetricInfo.Map.t;
     mutable pre_collect : (unit -> unit) list;
   }
 
-  type snapshot = Sample_set.t LabelSetMap.t MetricFamilyMap.t
+  type snapshot = Sample_set.t LabelSetMap.t MetricInfo.Map.t
 
   let pp_snapshot = TextFormat_0_0_4.output
 
   let create () = {
-    metrics = MetricFamilyMap.empty;
+    metrics = MetricInfo.Map.empty;
     pre_collect = [];
   }
 
@@ -180,13 +182,13 @@ module CollectorRegistry = struct
   let register_pre_collect t f = t.pre_collect <- f :: t.pre_collect
 
   let register t info collector =
-    if MetricFamilyMap.mem info t.metrics
+    if MetricInfo.Map.mem info t.metrics
     then failwith (Fmt.strf "%a already registered" MetricName.pp info.MetricInfo.name);
-    t.metrics <- MetricFamilyMap.add info collector t.metrics
+    t.metrics <- MetricInfo.Map.add info collector t.metrics
 
   let collect t =
     List.iter (fun f -> f ()) t.pre_collect;
-    MetricFamilyMap.map (fun f -> f ()) t.metrics
+    MetricInfo.Map.map (fun f -> f ()) t.metrics
 end
 
 module type METRIC = sig
