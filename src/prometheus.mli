@@ -10,12 +10,6 @@
       even though many applications will not enable it. Therefore it should have minimal dependencies.
 *)
 
-type metric_type =
-  | Counter
-  | Gauge
-  | Summary
-  | Histogram
-
 module type NAME = sig
   type t = private string
 
@@ -41,6 +35,13 @@ module MetricInfo : sig
     help : string;
     label_names : LabelName.t list;
   }
+  and metric_type =
+    | Counter
+    | Gauge
+    | Summary
+    | Histogram
+
+  val pp_metric_type : metric_type Fmt.t
 end
 (** Metadata about a metric. *)
 

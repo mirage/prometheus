@@ -39,12 +39,6 @@ module MetricName = struct
   include Name(struct let valid = Re.compile @@ Re.seq [ Re.bos; start; Re.rep rest; Re.eos] end)
 end
 
-type metric_type =
-  | Counter
-  | Gauge
-  | Summary
-  | Histogram
-
 module LabelSet = struct
   type t = string list
   let compare (a:t) (b:t) = compare a b
@@ -58,6 +52,17 @@ module MetricInfo = struct
     help : string;
     label_names : LabelName.t list;
   }
+  and metric_type =
+    | Counter
+    | Gauge
+    | Summary
+    | Histogram
+
+  let pp_metric_type ppf = function
+    | Counter   -> Fmt.string ppf "counter"
+    | Gauge     -> Fmt.string ppf "gauge"
+    | Summary   -> Fmt.string ppf "summary"
+    | Histogram -> Fmt.string ppf "histogram"
 
   let pp_opt () = function
     | None -> ""
@@ -100,12 +105,6 @@ module TextFormat_0_0_4 = struct
     | "\n" -> "\\n"
     | "\"" -> "\\\""
     | x -> failf "Unexpected match %S" x
-
-  let output_metric_type f = function
-    | Counter   -> Fmt.string f "counter"
-    | Gauge     -> Fmt.string f "gauge"
-    | Summary   -> Fmt.string f "summary"
-    | Histogram -> Fmt.string f "histogram"
 
   let output_unquoted f s =
     Fmt.string f @@ Re.replace re_unquoted_escapes ~f:quote s
@@ -156,7 +155,7 @@ module TextFormat_0_0_4 = struct
            #TYPE %a %a@.\
            %a"
           MetricName.pp name output_unquoted help
-          MetricName.pp name output_metric_type metric_type
+          MetricName.pp name MetricInfo.pp_metric_type metric_type
           (LabelSetMap.pp ~sep:Fmt.nop (output_metric ~name ~label_names)) samples
       )
 end
@@ -203,7 +202,7 @@ module type CHILD = sig
   type t
   val create : unit -> t
   val values : t -> Sample_set.t
-  val metric_type : metric_type
+  val metric_type : MetricInfo.metric_type
   val validate_label : string -> unit
 end
 
@@ -254,7 +253,7 @@ module Counter = struct
       type t = float ref
       let create () = ref 0.0
       let values t = [Sample_set.sample !t]
-      let metric_type = Counter
+      let metric_type = MetricInfo.Counter
       let validate_label _ = ()
     end)
 
@@ -271,7 +270,7 @@ module Gauge = struct
       type t = float ref
       let create () = ref 0.0
       let values t = [Sample_set.sample !t]
-      let metric_type = Gauge
+      let metric_type = MetricInfo.Gauge
       let validate_label _ = ()
     end)
 
@@ -298,7 +297,7 @@ module Summary = struct
         Sample_set.sample ~ext:"_sum" t.sum;
         Sample_set.sample ~ext:"_count" t.count;
       ]
-    let metric_type = Summary
+    let metric_type = MetricInfo.Summary
 
     let validate_label = function
       | "quantile" -> failwith "Can't use special label 'quantile' in summary"
@@ -390,7 +389,7 @@ module Histogram (Buckets : BUCKETS) = struct
       in
       fold 0. [] 0
 
-    let metric_type = Histogram
+    let metric_type = MetricInfo.Histogram
 
     let validate_label = function
       | "le" -> failwith "Can't use special label 'le' in histogram"
