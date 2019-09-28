@@ -97,7 +97,6 @@ module Sample_set = struct
 end
 
 module TextFormat_0_0_4 = struct
-  let failf fmt = Fmt.kstrf failwith fmt
   let re_unquoted_escapes = Re.compile @@ Re.set "\\\n"
   let re_quoted_escapes = Re.compile @@ Re.set "\"\\\n"
 
@@ -106,60 +105,59 @@ module TextFormat_0_0_4 = struct
     | "\\" -> "\\\\"
     | "\n" -> "\\n"
     | "\"" -> "\\\""
-    | x -> failf "Unexpected match %S" x
+    | x -> Fmt.kstrf failwith "Unexpected match %S" x
 
-  let output_unquoted f s =
-    Fmt.string f @@ Re.replace re_unquoted_escapes ~f:quote s
+  let output_unquoted ppf s =
+    Fmt.string ppf @@ Re.replace re_unquoted_escapes ~f:quote s
 
-  let output_quoted f s =
-    Fmt.string f @@ Re.replace re_quoted_escapes ~f:quote s
+  let output_quoted ppf s =
+    Fmt.string ppf @@ Re.replace re_quoted_escapes ~f:quote s
 
-  let output_value f v =
+  let output_value ppf v =
     match classify_float v with
-    | FP_normal | FP_subnormal | FP_zero -> Fmt.float f v
-    | FP_infinite when v > 0.0 -> Fmt.string f "+Inf"
-    | FP_infinite -> Fmt.string f "-Inf"
-    | FP_nan -> Fmt.string f "Nan"
+    | FP_normal | FP_subnormal | FP_zero -> Fmt.float ppf v
+    | FP_infinite when v > 0.0 -> Fmt.string ppf "+Inf"
+    | FP_infinite -> Fmt.string ppf "-Inf"
+    | FP_nan -> Fmt.string ppf "Nan"
 
-  let output_pairs f (label_names, label_values) =
-    let cont = ref false in
-    let output_pair name value =
-      if !cont then Fmt.string f ", "
-      else cont := true;
-      Fmt.pf f "%a=\"%a\"" LabelName.pp name output_quoted value
-    in
-    List.iter2 output_pair label_names label_values
+  let output_pair ppf (name, value) =
+    Fmt.pf ppf "%a=\"%a\"" LabelName.pp name output_quoted value
 
-  let output_labels ~label_names f = function
+  let output_pairs =
+    Fmt.list ~sep:(fun ppf () -> Fmt.string ppf ",") output_pair
+
+  let output_labels ppf (names, values) =
+    match values with
     | [] -> ()
-    | label_values -> Fmt.pf f "{%a}" output_pairs (label_names, label_values)
+    | _ ->
+      Fmt.pf ppf "{%a}" output_pairs (List.map2 (fun k v -> k,v) names values)
 
-  let output_sample ~base ~label_names ~label_values f { Sample_set.ext; value; bucket } =
-    let label_names, label_values = match bucket with
+  let output_sample ~base ~label_names ~label_values ppf { Sample_set.ext; value; bucket } =
+    let label_names_values = match bucket with
       | None -> label_names, label_values
       | Some (label_name, label_value) ->
         let label_value_str = Fmt.strf "%a" output_value label_value in
         label_name :: label_names, label_value_str :: label_values
     in
-    Fmt.pf f "%a%s%a %a@."
+    Fmt.pf ppf "%a%s%a %a"
       MetricName.pp base ext
-      (output_labels ~label_names) label_values
+      output_labels label_names_values
       output_value value
 
-  let output_metric ~name ~label_names f (label_values, samples) =
-    List.iter (output_sample ~base:name ~label_names ~label_values f) samples
+  let output_metric ~name ~label_names ppf (label_values, samples) =
+    Fmt.list ~sep:Format.pp_print_newline
+      (output_sample ~base:name ~label_names ~label_values) ppf samples
 
-  let output f =
-    MetricInfo.Map.iter (fun metric samples ->
-        let {MetricInfo.name; metric_type; help; label_names} = metric in
-        Fmt.pf f
-          "#HELP %a %a@.\
-           #TYPE %a %a@.\
-           %a"
-          MetricName.pp name output_unquoted help
-          MetricName.pp name MetricInfo.pp_metric_type metric_type
-          (LabelSetMap.pp ~sep:Fmt.nop (output_metric ~name ~label_names)) samples
-      )
+  let output =
+    MetricInfo.Map.pp begin fun ppf ({ name; metric_type; help; label_names }, samples) ->
+      Fmt.pf ppf
+        "#HELP %a %a@.\
+         #TYPE %a %a@.\
+         %a"
+        MetricName.pp name output_unquoted help
+        MetricName.pp name MetricInfo.pp_metric_type metric_type
+        (LabelSetMap.pp ~sep:Fmt.nop (output_metric ~name ~label_names)) samples
+    end
 end
 
 module CollectorRegistry = struct
