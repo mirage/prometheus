@@ -1,4 +1,11 @@
 (library
  (name prometheus)
  (public_name prometheus)
- (libraries lwt astring asetmap fmt re))
+ (modules prometheus)
+ (libraries astring asetmap fmt re))
+
+(library
+ (name prometheus_lwt)
+ (public_name prometheus-lwt)
+ (modules prometheus_lwt)
+ (libraries prometheus lwt))

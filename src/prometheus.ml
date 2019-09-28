@@ -210,19 +210,6 @@ module Gauge = struct
 
   let set t v =
     t := v
-
-  let track_inprogress t fn =
-    inc_one t;
-    Lwt.finalize fn (fun () -> dec_one t; Lwt.return_unit)
-
-  let time t gettimeofday fn =
-    let start = gettimeofday () in
-    Lwt.finalize fn
-      (fun () ->
-         let finish = gettimeofday () in
-         inc t (finish -. start);
-         Lwt.return_unit
-      )
 end
 
 module Summary = struct
@@ -249,15 +236,6 @@ module Summary = struct
     let open Child in
     t.count <- t.count +. 1.0;
     t.sum <- t.sum +. v
-
-  let time t gettimeofday fn =
-    let start = gettimeofday () in
-    Lwt.finalize fn
-      (fun () ->
-         let finish = gettimeofday () in
-         observe t (finish -. start);
-         Lwt.return_unit
-      )
 end
 
 module Histogram_spec = struct
@@ -306,7 +284,6 @@ end
 module type HISTOGRAM = sig
   include METRIC
   val observe : t -> float -> unit
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 end
 
 let bucket_label = LabelName.v "le"
@@ -353,15 +330,6 @@ module Histogram (Buckets : BUCKETS) = struct
     let index = Histogram_spec.index t.upper_bounds v in
     t.counts.(index) <- t.counts.(index) +. 1.;
     t.sum <- t.sum +. v
-
-  let time t gettimeofday fn =
-    let start = gettimeofday () in
-    Lwt.finalize fn
-      (fun () ->
-         let finish = gettimeofday () in
-         observe t (finish -. start);
-         Lwt.return_unit
-      )
 end
 
 module DefaultHistogram = Histogram (

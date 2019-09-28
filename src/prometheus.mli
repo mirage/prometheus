@@ -145,14 +145,6 @@ module Gauge : sig
 
   val set : t -> float -> unit
   (** [set t v] sets the current value of the guage to [v]. *)
-
-  val track_inprogress : t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [track_inprogress t f] increases the value of the gauge by one while [f ()] is running. *)
-
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
-      increases the metric by the difference.
-  *)
 end
 (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
 
@@ -161,10 +153,6 @@ module Summary : sig
 
   val observe : t -> float -> unit
   (** [observe t v] increases the total by [v] and the count by one. *)
-
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
-      observes the difference. *)
 end
 (** A summary is a metric that records both the number of readings and their total.
     This allows calculating the average. *)
@@ -189,18 +177,18 @@ module Histogram_spec : sig
   (** [of_list [0.5; 1.]] will return a histogram with buckets [0.5;1.;infinity]. *)
 end
 
+module type BUCKETS = sig
+  val spec : Histogram_spec.t
+end
+
 module type HISTOGRAM = sig
   include METRIC
 
   val observe : t -> float -> unit
   (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum. *)
-
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
-      observes the difference. *)
 end
 
-module Histogram (Buckets : sig val spec : Histogram_spec.t end) : HISTOGRAM
+module Histogram (Buckets : BUCKETS) : HISTOGRAM
 
 module DefaultHistogram : HISTOGRAM
 (** A histogram configured with reasonable defaults for measuring network request times in seconds. *)
