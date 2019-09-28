@@ -74,6 +74,9 @@ module CollectorRegistry : sig
   type snapshot = Sample_set.t LabelSetMap.t MetricFamilyMap.t
   (** The result of reading a set of metrics. *)
 
+  val pp_snapshot : snapshot Fmt.t
+  (** Format a snapshot in Prometheus's text format, version 0.0.4. *)
+
   val create : unit -> t
   (** [create ()] is a fresh registry. This is mostly useful for testing. *)
 
