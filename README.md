@@ -57,7 +57,7 @@ which includes a cmdliner option and pre-configured web-server.
 See the `examples/example.ml` program for an example, which can be run as:
 
 ```shell
-$ ./_build/examples/example.native --listen-prometheus=9090
+$ dune exec -- examples/example.exe --listen-prometheus=9090
 If run with the option --listen-prometheus=9090, this program serves metrics at
 http://localhost:9090/metrics
 Tick!
