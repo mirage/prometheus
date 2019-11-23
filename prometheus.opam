@@ -8,7 +8,7 @@ doc: "https://mirage.github.io/prometheus/"
 bug-reports: "https://github.com/mirage/prometheus/issues"
 depends: [
   "ocaml" {>= "4.01.0"}
-  "dune" {>= "1.0"}
+  "dune"
   "astring"
   "asetmap"
   "fmt"
@@ -19,5 +19,6 @@ depends: [
 build: [
   ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 dev-repo: "git+https://github.com/mirage/prometheus.git"

@@ -4,6 +4,7 @@
 
 (alias
  (name runtest)
+ (package prometheus-app)
  (deps
   (:< test.exe))
  (action
