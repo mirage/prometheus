@@ -11,5 +11,7 @@ env:
     - OCAML_VERSION=4.04 PACKAGE="prometheus-app"
     - OCAML_VERSION=4.05 PACKAGE="prometheus-app"
     - OCAML_VERSION=4.06 PACKAGE="prometheus-app"
+    - OCAML_VERSION=4.07 PACKAGE="prometheus-app"
+    - OCAML_VERSION=4.08 PACKAGE="prometheus-app"
 os:
   - linux
