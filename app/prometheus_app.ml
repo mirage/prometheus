@@ -26,7 +26,7 @@ module TextFormat_0_0_4 = struct
   let output_quoted f s =
     Fmt.string f @@ Re.replace re_quoted_escapes ~f:quote s
 
-  (* Fmt.float by default prints floats using scientific expotential
+  (* Fmt.float by default prints floats using scientific exponential
    * notation, which looses significant data on e.g. timestamp:
    *   Fmt.strf "%a" Fmt.float 1575363850.57 --> 1.57536e+09 *)
   let float_fmt f =
