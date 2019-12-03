@@ -19,11 +19,11 @@ let test_metrics () =
   Alcotest.(check string) "Text output"
     "#HELP dkci_tests_requests Requests\n\
      #TYPE dkci_tests_requests counter\n\
-     dkci_tests_requests{method=\"GET\", path=\"\\\"\\\\-\\n\"} 5\n\
-     dkci_tests_requests{method=\"POST\", path=\"/login\"} 3\n\
+     dkci_tests_requests{method=\"GET\", path=\"\\\"\\\\-\\n\"} 5.000000\n\
+     dkci_tests_requests{method=\"POST\", path=\"/login\"} 3.000000\n\
      #HELP tests Test \\\\counter:\\n1\n\
      #TYPE tests counter\n\
-     tests 1\n\
+     tests 1.000000\n\
     "
     output
 
@@ -46,16 +46,16 @@ let test_histogram () =
   Alcotest.(check string) "Text output"
     "#HELP dkci_tests_requests Requests\n\
      #TYPE dkci_tests_requests histogram\n\
-     dkci_tests_requests_sum{method=\"GET\", path=\"/foo\"} 0.12\n\
-     dkci_tests_requests_count{method=\"GET\", path=\"/foo\"} 1\n\
-     dkci_tests_requests_bucket{le=\"+Inf\", method=\"GET\", path=\"/foo\"} 1\n\
-     dkci_tests_requests_bucket{le=\"0.5\", method=\"GET\", path=\"/foo\"} 1\n\
-     dkci_tests_requests_bucket{le=\"0.25\", method=\"GET\", path=\"/foo\"} 1\n\
-     dkci_tests_requests_sum{method=\"PUT\", path=\"/bar\"} 0.33\n\
-     dkci_tests_requests_count{method=\"PUT\", path=\"/bar\"} 1\n\
-     dkci_tests_requests_bucket{le=\"+Inf\", method=\"PUT\", path=\"/bar\"} 1\n\
-     dkci_tests_requests_bucket{le=\"0.5\", method=\"PUT\", path=\"/bar\"} 1\n\
-     dkci_tests_requests_bucket{le=\"0.25\", method=\"PUT\", path=\"/bar\"} 0\n\
+     dkci_tests_requests_sum{method=\"GET\", path=\"/foo\"} 0.120000\n\
+     dkci_tests_requests_count{method=\"GET\", path=\"/foo\"} 1.000000\n\
+     dkci_tests_requests_bucket{le=\"+Inf\", method=\"GET\", path=\"/foo\"} 1.000000\n\
+     dkci_tests_requests_bucket{le=\"0.500000\", method=\"GET\", path=\"/foo\"} 1.000000\n\
+     dkci_tests_requests_bucket{le=\"0.250000\", method=\"GET\", path=\"/foo\"} 1.000000\n\
+     dkci_tests_requests_sum{method=\"PUT\", path=\"/bar\"} 0.330000\n\
+     dkci_tests_requests_count{method=\"PUT\", path=\"/bar\"} 1.000000\n\
+     dkci_tests_requests_bucket{le=\"+Inf\", method=\"PUT\", path=\"/bar\"} 1.000000\n\
+     dkci_tests_requests_bucket{le=\"0.500000\", method=\"PUT\", path=\"/bar\"} 1.000000\n\
+     dkci_tests_requests_bucket{le=\"0.250000\", method=\"PUT\", path=\"/bar\"} 0.000000\n\
     "
     output
 
