@@ -26,9 +26,15 @@ module TextFormat_0_0_4 = struct
   let output_quoted f s =
     Fmt.string f @@ Re.replace re_quoted_escapes ~f:quote s
 
+  (* Fmt.float by default prints floats using scientific expotential
+   * notation, which looses significant data on e.g. timestamp:
+   *   Fmt.strf "%a" Fmt.float 1575363850.57 --> 1.57536e+09 *)
+  let float_fmt f =
+    Fmt.pf f "%f"
+
   let output_value f v =
     match classify_float v with
-    | FP_normal | FP_subnormal | FP_zero -> Fmt.float f v
+    | FP_normal | FP_subnormal | FP_zero -> float_fmt f v
     | FP_infinite when v > 0.0 -> Fmt.string f "+Inf"
     | FP_infinite -> Fmt.string f "-Inf"
     | FP_nan -> Fmt.string f "Nan"

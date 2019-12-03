@@ -1,3 +1,6 @@
+## v0.7 ()
+- switch float representation to OCaml's default `"%f"` (#, @toots)
+
 ## v0.6 (2019-11-23)
 
 - upgrade build to dune (@talex5)
