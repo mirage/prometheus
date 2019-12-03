@@ -1,5 +1,5 @@
 ## v0.7 ()
-- switch float representation to OCaml's default `"%f"` (#, @toots)
+- switch float representation to OCaml's default `"%f"` (#22, @toots)
 
 ## v0.6 (2019-11-23)
 
