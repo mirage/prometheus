@@ -18,7 +18,7 @@ module Unix_runtime = struct
     info, collect
 
   let process_start_time_seconds =
-    simple_metric ~metric_type:Counter "process_start_time_seconds" (fun () -> start_time)
+      simple_metric ~metric_type:Counter "process_start_time_seconds" (fun () -> start_time)
       ~help:"Start time of the process since unix epoch in seconds."
 
   let metrics = [
@@ -34,7 +34,7 @@ let serve = function
   | None -> []
   | Some port ->
     let mode = `TCP (`Port port) in
-    let callback = Server.callback in
+    let callback = Server.callback ~time:Unix.gettimeofday in
     let thread = Cohttp_lwt_unix.Server.create ~mode (Cohttp_lwt_unix.Server.make ~callback ()) in
     [thread]
 

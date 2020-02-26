@@ -1,5 +1,15 @@
 open Prometheus
 
+module Metrics = struct
+  let collection_duration_seconds =
+    { MetricInfo.
+      name = MetricName.v "prometheus_app_collection_duration_seconds";
+      metric_type = Gauge;
+      help = "Time taken to collect metrics";
+      label_names = [];
+    }
+end
+
 let failf fmt =
   Fmt.kstrf failwith fmt
 
@@ -143,14 +153,22 @@ module Runtime = struct
   ]
 end
 
-
 module Cohttp(Server : Cohttp_lwt.S.Server) = struct
-  let callback _conn req _body =
+  let callback ?time _conn req _body =
     let open Cohttp in
     let uri = Request.uri req in
     match Request.meth req, Uri.path uri with
     | `GET, "/metrics" ->
-      let data = Prometheus.CollectorRegistry.(collect default) in
+      let data =
+        match time with
+        | None -> Prometheus.CollectorRegistry.(collect default)
+        | Some time ->
+          let t0 = time () in
+          let data = Prometheus.CollectorRegistry.(collect default) in
+          let t1 = time () in
+          let value = Sample_set.sample (t1 -. t0) in
+          MetricFamilyMap.add Metrics.collection_duration_seconds (LabelSetMap.singleton [] [value]) data
+      in
       let body = Fmt.to_to_string TextFormat_0_0_4.output data in
       let headers = Header.init_with "Content-Type" "text/plain; version=0.0.4" in
       Server.respond_string ~status:`OK ~headers ~body ()

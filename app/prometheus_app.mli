@@ -19,8 +19,11 @@ end
 
 module Cohttp (S : Cohttp_lwt.S.Server) : sig
   val callback :
+    ?time:(unit -> float) ->
     S.conn ->
     Cohttp.Request.t ->
     Cohttp_lwt.Body.t -> (Cohttp.Response.t * Cohttp_lwt.Body.t) Lwt.t
 end
-(** A Cohttp callback for a web-server that exposes the Prometheus metrics. *)
+(** A Cohttp callback for a web-server that exposes the Prometheus metrics.
+    @param time If provided, this is used to report how long metrics collection
+    took (use e.g. [Unix.gettimeofday]). *)
