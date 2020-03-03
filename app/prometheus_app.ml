@@ -81,9 +81,9 @@ module TextFormat_0_0_4 = struct
 end
 
 module Runtime = struct
-  let current = ref (Gc.stat ())
+  let current = ref (Gc.quick_stat ())
   let update () =
-    current := Gc.stat ()
+    current := Gc.quick_stat ()
 
   let simple_metric ~metric_type ~help name fn =
     let info = {
