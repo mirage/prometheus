@@ -29,7 +29,16 @@ let main prometheus_config =
 
 open Cmdliner
 
+(* Optional: configure logging *)
 let () =
+  Prometheus_unix.Logging.init ()
+    ~default_level:Logs.Debug
+    ~levels:[
+      "cohttp.lwt.io", Logs.Info;
+    ]
+
+let () =
+  Logs.info (fun f -> f "Logging initialised.");
   print_endline "If run with the option --listen-prometheus=9090, this program serves metrics at\n\
                  http://localhost:9090/metrics";
   let spec = Term.(const main $ Prometheus_unix.opts) in

@@ -1,31 +1,6 @@
 opam-version: "2.0"
 synopsis: "Client library for Prometheus monitoring"
-maintainer: "talex5@gmail.com"
-authors: ["Thomas Leonard" "David Scott"]
-license: "Apache"
-homepage: "https://github.com/mirage/prometheus"
-doc: "https://mirage.github.io/prometheus/"
-bug-reports: "https://github.com/mirage/prometheus/issues"
-depends: [
-  "ocaml" {>= "4.02.3"}
-  "dune" {>= "1.0"}
-  "prometheus" {=version}
-  "fmt"
-  "re"
-  "cohttp" {>= "1.0.0"}
-  "cohttp-lwt" {< "3.0.0"}
-  "cohttp-lwt-unix" {< "3.0.0"}
-  "lwt" {>= "2.5.0"}
-  "cmdliner"
-  "alcotest" {with-test}
-]
-build: [
-  ["dune" "subst"] {pinned}
-  ["dune" "build" "-p" name "-j" jobs]
-  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
-]
-dev-repo: "git+https://github.com/mirage/prometheus.git"
-description: """
+description: """\
 Applications can enable metric reporting using the `prometheus-app` opam package.
 This depends on cohttp and can serve the metrics collected above over HTTP.
 
@@ -42,5 +17,32 @@ Tick!
 ...
 ```
 
-Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `Unix` dependency.
-"""
+Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `Unix` dependency."""
+maintainer: "talex5@gmail.com"
+authors: ["Thomas Leonard" "David Scott"]
+license: "Apache"
+homepage: "https://github.com/mirage/prometheus"
+doc: "https://mirage.github.io/prometheus/"
+bug-reports: "https://github.com/mirage/prometheus/issues"
+depends: [
+  "ocaml" {>= "4.02.3"}
+  "dune" {>= "1.0"}
+  "prometheus" {= version}
+  "fmt"
+  "re"
+  "cohttp" {>= "1.0.0"}
+  "cohttp-lwt" {< "3.0.0"}
+  "cohttp-lwt-unix" {< "3.0.0"}
+  "lwt" {>= "2.5.0"}
+  "cmdliner"
+  "alcotest" {with-test}
+  "asetmap"
+  "astring"
+  "logs"
+]
+build: [
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/prometheus.git"

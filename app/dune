@@ -8,6 +8,6 @@
 (library
  (name prometheus_app_unix)
  (public_name prometheus-app.unix)
- (libraries prometheus prometheus-app cmdliner cohttp-lwt cohttp-lwt-unix)
+ (libraries prometheus prometheus-app cmdliner cohttp-lwt cohttp-lwt-unix logs.fmt fmt.tty)
  (modules Prometheus_unix)
  (wrapped false))
