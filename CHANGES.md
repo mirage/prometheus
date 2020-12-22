@@ -1,3 +1,15 @@
+## v1.0 (2020-12-22)
+
+- Add logging configuration (#29, @talex5).  
+  To configure a server to report counts for log messages:
+  ```ocaml
+  let () = Prometheus_unix.Logging.init ()
+  ```
+  This installs a reporter that reports the number of messages logged by each log source and at each level.
+  The reporter also displays the timestamp and log source with each message, which is a more suitable configuration for servers.
+
+- Add bounds on cohttp to prepare for cohttp 3 release (#28, @talex5).
+
 ## v0.7 (2020-03-03)
 
 - switch float representation to OCaml's default `"%f"` (#22, @toots)
