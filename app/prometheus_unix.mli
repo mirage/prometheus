@@ -29,6 +29,7 @@ module Logging : sig
   val init :
     ?default_level:Logs.level ->
     ?levels:(string * Logs.level) list ->
+    ?formatter:Format.formatter ->
     unit -> unit
   (** Initialise the Logs library with a reporter that reports prometheus metrics too.
       The reporter is configured to log to stderr and the log messages include a
@@ -49,7 +50,8 @@ module Logging : sig
           ]
       ]}
       @param default_level The default log-level to use (default {!Logs.Info}).
-      @param levels Provides levels for specific log sources. *)
+      @param levels Provides levels for specific log sources.
+      @param formatter A custom formatter (default {!Fmt.stderr}). *)
 
   val inc_counter : Logs.level -> string -> unit
   (** [inc_counter level src] increments the count of messages logged by [src] at [level].
