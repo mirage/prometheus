@@ -1,3 +1,8 @@
+## v1.1 (2021-06-08)
+
+- Allow using a custom formatter for log output (@MisterDA #31).
+  Windows services crash if they try to use stderr.
+
 ## v1.0 (2020-12-22)
 
 - Add logging configuration (#29, @talex5).  
