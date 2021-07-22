@@ -30,9 +30,8 @@ depends: [
   "prometheus" {= version}
   "fmt"
   "re"
-  "cohttp" {>= "1.0.0"}
-  "cohttp-lwt" {< "3.0.0"}
-  "cohttp-lwt-unix" {< "3.0.0"}
+  "cohttp-lwt" {>= "4.0.0"}
+  "cohttp-lwt-unix" {>= "4.0.0"}
   "lwt" {>= "2.5.0"}
   "cmdliner"
   "alcotest" {with-test}
