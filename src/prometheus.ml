@@ -184,6 +184,8 @@ module Counter = struct
       let validate_label _ = ()
     end)
 
+  let value t = !t
+
   let inc_one t =
     t := !t +. 1.0
 
@@ -200,6 +202,8 @@ module Gauge = struct
       let metric_type = Gauge
       let validate_label _ = ()
     end)
+
+  let value t = !t
 
   let inc t v =
     t := !t +. v

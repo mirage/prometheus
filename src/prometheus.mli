@@ -126,6 +126,10 @@ end
 
 module Counter : sig
   include METRIC
+
+  val value : t -> float
+  (** [value t] returns the current value of the counter. *)
+
   val inc_one : t -> unit
   val inc : t -> float -> unit
   (** [inc t v] increases [t] by [v], which must be non-negative. *)
@@ -134,6 +138,9 @@ end
 
 module Gauge : sig
   include METRIC
+
+  val value : t -> float
+  (** [value t] returns the current value of the guage. *)
 
   val inc_one : t -> unit
   val inc : t -> float -> unit
