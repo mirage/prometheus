@@ -1,7 +1,7 @@
 open Prometheus
 
 let failf fmt =
-  Fmt.kstrf failwith fmt
+  Fmt.kstr failwith fmt
 
 module TextFormat_0_0_4 = struct
   let re_unquoted_escapes = Re.compile @@ Re.set "\\\n"
@@ -28,7 +28,7 @@ module TextFormat_0_0_4 = struct
 
   (* Fmt.float by default prints floats using scientific exponential
    * notation, which loses significant data on e.g. timestamp:
-   *   Fmt.strf "%a" Fmt.float 1575363850.57 --> 1.57536e+09 *)
+   *   Fmt.str "%a" Fmt.float 1575363850.57 --> 1.57536e+09 *)
   let float_fmt f =
     Fmt.pf f "%f"
 
@@ -56,7 +56,7 @@ module TextFormat_0_0_4 = struct
     let label_names, label_values = match bucket with
       | None -> label_names, label_values
       | Some (label_name, label_value) ->
-        let label_value_str = Fmt.strf "%a" output_value label_value in
+        let label_value_str = Fmt.str "%a" output_value label_value in
         label_name :: label_names, label_value_str :: label_values
     in
     Fmt.pf f "%a%s%a %a@."

@@ -17,7 +17,7 @@ module Name(N : NAME_SPEC) : NAME = struct
 
   let v name =
     if not (Re.execp N.valid name) then
-      failwith (Fmt.strf "Invalid name %S" name);
+      failwith (Fmt.str "Invalid name %S" name);
     name
 
   let compare = String.compare
@@ -108,7 +108,7 @@ module CollectorRegistry = struct
 
   let register t info collector =
     if MetricFamilyMap.mem info t.metrics
-    then failwith (Fmt.strf "%a already registered" MetricName.pp info.MetricInfo.name);
+    then failwith (Fmt.str "%a already registered" MetricName.pp info.MetricInfo.name);
     t.metrics <- MetricFamilyMap.add info collector t.metrics
 
   let collect t =
