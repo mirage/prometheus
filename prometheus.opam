@@ -8,12 +8,11 @@ doc: "https://mirage.github.io/prometheus/"
 bug-reports: "https://github.com/mirage/prometheus/issues"
 depends: [
   "ocaml" {>= "4.01.0"}
-  "dune"
+  "dune" {>= "2.0"}
   "astring"
   "asetmap"
   "re"
   "lwt" {>= "2.5.0"}
-  "alcotest" {with-test}
 ]
 build: [
   ["dune" "build" "-p" name "-j" jobs]

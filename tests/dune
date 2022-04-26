@@ -1,11 +1,4 @@
-(executables
- (names test)
- (libraries prometheus prometheus-app alcotest))
-
-(alias
- (name runtest)
+(test
+ (name test)
  (package prometheus-app)
- (deps
-  (:< test.exe))
- (action
-  (run %{<} -e -v)))
+ (libraries prometheus prometheus-app alcotest))
