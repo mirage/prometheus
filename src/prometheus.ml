@@ -8,7 +8,7 @@ end
 module type NAME = sig
   type t = private string
   val v : string -> t
-  val pp : t Fmt.t
+  val pp : Format.formatter -> t -> unit
   val compare : t -> t -> int
 end
 
@@ -17,12 +17,12 @@ module Name(N : NAME_SPEC) : NAME = struct
 
   let v name =
     if not (Re.execp N.valid name) then
-      failwith (Fmt.str "Invalid name %S" name);
+      failwith (Format.asprintf "Invalid name %S" name);
     name
 
   let compare = String.compare
 
-  let pp = Fmt.string
+  let pp = Format.pp_print_string
 end
 
 let alphabet = Re.(alt [ rg 'a' 'z'; rg 'A' 'Z' ])
@@ -108,7 +108,7 @@ module CollectorRegistry = struct
 
   let register t info collector =
     if MetricFamilyMap.mem info t.metrics
-    then failwith (Fmt.str "%a already registered" MetricName.pp info.MetricInfo.name);
+    then failwith (Format.asprintf "%a already registered" MetricName.pp info.MetricInfo.name);
     t.metrics <- MetricFamilyMap.add info collector t.metrics
 
   let collect t =

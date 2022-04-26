@@ -11,7 +11,6 @@ depends: [
   "dune"
   "astring"
   "asetmap"
-  "fmt" {>= "0.8.7"}
   "re"
   "lwt" {>= "2.5.0"}
   "alcotest" {with-test}
