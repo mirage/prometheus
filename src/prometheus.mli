@@ -22,7 +22,7 @@ module type NAME = sig
   val v : string -> t
   (** Raises an exception if the name is not valid. *)
 
-  val pp : t Fmt.t
+  val pp : Format.formatter -> t -> unit
 
   val compare : t -> t -> int
 end

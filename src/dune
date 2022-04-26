@@ -1,4 +1,4 @@
 (library
  (name prometheus)
  (public_name prometheus)
- (libraries lwt astring asetmap fmt re))
+ (libraries lwt astring asetmap re))
