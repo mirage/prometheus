@@ -41,8 +41,6 @@ let () =
   Logs.info (fun f -> f "Logging initialised.");
   print_endline "If run with the option --listen-prometheus=9090, this program serves metrics at\n\
                  http://localhost:9090/metrics";
-  let spec = Term.(const main $ Prometheus_unix.opts) in
-  let info = Term.info "example" in
-  match Term.eval (spec, info) with
-  | `Error _ -> exit 1
-  | _ -> exit 0
+  let info = Cmd.info "example" in
+  let cmd = Cmd.v info Term.(const main $ Prometheus_unix.opts) in
+  exit @@ Cmd.eval cmd
