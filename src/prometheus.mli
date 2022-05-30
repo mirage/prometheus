@@ -80,17 +80,24 @@ module CollectorRegistry : sig
   val default : t
   (** The default registry. *)
 
-  val collect : t -> snapshot
+  val collect : t -> snapshot Lwt.t
   (** Read the current value of each metric. *)
 
   val register : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)
 
+  val register_lwt : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t Lwt.t) -> unit
+  (** [register_lwt t metric collector] is the same as [register t metrics collector]
+      but [collector] returns [Sample_set.t LabelSetMap.t Lwt.t]. *)
+
   val register_pre_collect : t -> (unit -> unit) -> unit
   (** [register_pre_collect t fn] arranges for [fn ()] to be called at the start
       of each collection. This is useful if one expensive call provides
       information about multiple metrics. *)
+
+  val register_pre_collect_lwt : t -> (unit -> unit Lwt.t) -> unit
+  (** [register_pre_collect t fn] same as [register_pre_collect] but [fn] returns [unit Lwt.t]. *)
 end
 (** A collection of metric reporters. Usually, only {!CollectorRegistry.default} is used. *)
 
