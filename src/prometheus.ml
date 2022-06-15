@@ -91,29 +91,60 @@ end
 
 module CollectorRegistry = struct
   type t = {
-    mutable metrics : (unit -> Sample_set.t LabelSetMap.t) MetricFamilyMap.t;
-    mutable pre_collect : (unit -> unit) list;
+    mutable metrics     : (unit -> Sample_set.t LabelSetMap.t      ) MetricFamilyMap.t;
+    mutable metrics_lwt : (unit -> Sample_set.t LabelSetMap.t Lwt.t) MetricFamilyMap.t;
+    mutable pre_collect     : (unit -> unit      ) list;
+    mutable pre_collect_lwt : (unit -> unit Lwt.t) list;
   }
 
   type snapshot = Sample_set.t LabelSetMap.t MetricFamilyMap.t
 
   let create () = {
     metrics = MetricFamilyMap.empty;
+    metrics_lwt = MetricFamilyMap.empty;
     pre_collect = [];
+    pre_collect_lwt = [];
   }
 
   let default = create ()
 
   let register_pre_collect t f = t.pre_collect <- f :: t.pre_collect
 
+  let register_pre_collect_lwt t f = t.pre_collect_lwt <- f :: t.pre_collect_lwt
+
+  let ensure_not_registered t info =
+    if MetricFamilyMap.mem info t.metrics ||
+       MetricFamilyMap.mem info t.metrics_lwt
+    then failwith (Format.asprintf "%a already registered" MetricName.pp info.MetricInfo.name)
+
   let register t info collector =
-    if MetricFamilyMap.mem info t.metrics
-    then failwith (Format.asprintf "%a already registered" MetricName.pp info.MetricInfo.name);
+    ensure_not_registered t info;
     t.metrics <- MetricFamilyMap.add info collector t.metrics
+
+  let register_lwt t info collector =
+    ensure_not_registered t info;
+    t.metrics_lwt <- MetricFamilyMap.add info collector t.metrics_lwt
+
+  open Lwt.Infix
+
+  let map_p m =
+    MetricFamilyMap.fold (fun k f acc -> (k, f ()) :: acc) m []
+    |> Lwt_list.fold_left_s
+      (fun acc (k, v) -> v >|= fun v -> MetricFamilyMap.add k v acc)
+      MetricFamilyMap.empty
 
   let collect t =
     List.iter (fun f -> f ()) t.pre_collect;
-    MetricFamilyMap.map (fun f -> f ()) t.metrics
+    Lwt_list.iter_p (fun f -> f ()) t.pre_collect_lwt >>= fun () ->
+    let metrics = MetricFamilyMap.map (fun f -> f ()) t.metrics in
+    map_p t.metrics_lwt >|= fun metrics_lwt ->
+    MetricFamilyMap.merge
+      (fun _ v1 v2 ->
+         match v1 with
+         | Some v1 -> Some v1
+         | None -> v2)
+      metrics metrics_lwt
+
 end
 
 module type METRIC = sig
