@@ -1,3 +1,13 @@
+## v1.2 (2022-06-16)
+
+- Add lwt collectors and pre-collectors (@killian-delarue, #43).
+  Note that this is a temporary feature while we wait for OCaml 5 to be released,
+  when this can be replaced by the use of effects.
+
+- Fix deprecations in Fmt 0.8.10 (@MisterDA, #36).
+
+- General build updates, upstream deprecations, etc (@talex5, #33 #34 #35 #40 #42).
+
 ## v1.1 (2021-06-08)
 
 - Allow using a custom formatter for log output (@MisterDA #31).
