@@ -1,0 +1,13 @@
+(library
+ (name prometheus_reporter)
+ (public_name prometheus-reporter)
+ (libraries prometheus lwt astring fmt re)
+ (modules Prometheus_reporter)
+ (wrapped false))
+
+(library
+ (name prometheus_reporter_unix)
+ (public_name prometheus-reporter.unix)
+ (libraries prometheus cmdliner logs.fmt fmt.tty)
+ (modules Prometheus_reporter_unix)
+ (wrapped false))
