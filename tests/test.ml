@@ -20,12 +20,12 @@ let test_metrics () =
   CollectorRegistry.collect registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
-    "#HELP dkci_tests_requests Requests\n\
-     #TYPE dkci_tests_requests counter\n\
+    "# HELP dkci_tests_requests Requests\n\
+     # TYPE dkci_tests_requests counter\n\
      dkci_tests_requests{method=\"GET\", path=\"\\\"\\\\-\\n\"} 5.000000\n\
      dkci_tests_requests{method=\"POST\", path=\"/login\"} 3.000000\n\
-     #HELP tests Test \\\\counter:\\n1\n\
-     #TYPE tests counter\n\
+     # HELP tests Test \\\\counter:\\n1\n\
+     # TYPE tests counter\n\
      tests 1.000000\n\
     "
     output
@@ -78,8 +78,8 @@ let test_histogram () =
   CollectorRegistry.collect registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
-    "#HELP dkci_tests_requests Requests\n\
-     #TYPE dkci_tests_requests histogram\n\
+    "# HELP dkci_tests_requests Requests\n\
+     # TYPE dkci_tests_requests histogram\n\
      dkci_tests_requests_sum{method=\"GET\", path=\"/foo\"} 0.120000\n\
      dkci_tests_requests_count{method=\"GET\", path=\"/foo\"} 1.000000\n\
      dkci_tests_requests_bucket{le=\"+Inf\", method=\"GET\", path=\"/foo\"} 1.000000\n\
