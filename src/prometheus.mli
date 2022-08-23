@@ -1,5 +1,6 @@
 (** Collect metrics for Prometheus.
-    See: https://prometheus.io/
+
+    See: {{:https://prometheus.io/}https://prometheus.io/}
 
     Notes:
 
@@ -66,6 +67,7 @@ module Sample_set : sig
 
   val sample : ?ext:string -> ?bucket:(LabelName.t * float) -> float -> sample
 end
+(** A collection of values that together represent a single sample. *)
 
 module CollectorRegistry : sig
   type t

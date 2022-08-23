@@ -1,5 +1,6 @@
 (** Report metrics for Prometheus.
-    See: https://prometheus.io/
+
+    See: {{:https://prometheus.io/}https://prometheus.io/}
 
     Notes:
 
