@@ -52,9 +52,33 @@ Prometheus.Counter.inc_one (Metrics.builds_succeeded_total build_type)
 Applications can enable metric reporting using the `prometheus-app` opam package.
 This depends on cohttp and can serve the metrics collected above over HTTP.
 
+For example a server running on Linux will typically use the following code to 
+initialise logging:
+
+``` ocaml
+let setup_logs ?default_level = 
+  Prometheus_unix.Logging.init ?default_level ()
+```
+
+using a `default_level` value parsed from `Logs_cli.level` using cmdliner as:
+
+``` ocaml
+let main (?default_level: Logs.level option) = 
+    (* Run main code loop here *)
+    ...
+
+open Cmdliner
+
+let cmd =
+  let doc = "An example prometheus cli client" in
+  let info = Cmd.info "prometheus-example" ~doc in
+  Cmd.v info Term.(const main $ Logs_cli.level ())
+```
+
 The `prometheus-app.unix` ocamlfind library provides the `Prometheus_unix` module,
-which includes a cmdliner option and pre-configured web-server.
-See the `examples/example.ml` program for an example, which can be run as:
+which includes a [cmdliner][] option shown above and pre-configured web-server.
+
+See the `examples/example.ml` program for a full example, which can be run as:
 
 ```shell
 $ dune exec -- examples/example.exe --listen-prometheus=9090
@@ -78,3 +102,4 @@ This code is licensed under the Apache License, Version 2.0. See
 license text.
 
 [Prometheus]: https://prometheus.io
+[Cmdliner]: https://github.com/dbuenzli/cmdliner
