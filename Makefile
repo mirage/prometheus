@@ -1,10 +1,7 @@
-.PHONY: build clean test
-
-build:
-	dune build @install ./examples/example.exe
+.PHONY: clean test
 
 test:
-	dune runtest
+	dune build @check @runtest
 
 clean:
 	dune clean
