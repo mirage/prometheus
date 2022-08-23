@@ -52,11 +52,11 @@ let test_lwt_collectors () =
   CollectorRegistry.collect registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
-    "#HELP counter_1 The first counter\n\
-     #TYPE counter_1 counter\n\
+    "# HELP counter_1 The first counter\n\
+     # TYPE counter_1 counter\n\
      counter_1 1.000000\n\
-     #HELP counter_2 The second counter\n\
-     #TYPE counter_2 counter\n\
+     # HELP counter_2 The second counter\n\
+     # TYPE counter_2 counter\n\
      counter_2 2.000000\n"
     output
 
