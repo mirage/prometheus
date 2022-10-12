@@ -42,17 +42,41 @@ module Unix_runtime = struct
   ]
 end
 
-type config = int option
+type config = {
+  port : int option;
+  addr : string option;
+}
 
 module Server = Prometheus_app.Cohttp(Cohttp_lwt_unix.Server)
 
-let serve = function
-  | None -> []
-  | Some port ->
+let serve config = match config.port, config.addr with
+  | None, _ -> []
+  | Some port, None ->
     let mode = `TCP (`Port port) in
     let callback = Server.callback in
     let thread = Cohttp_lwt_unix.Server.create ~mode (Cohttp_lwt_unix.Server.make ~callback ()) in
     [thread]
+  | Some port, Some addr  ->
+    let open! Unix in
+    let [@ocaml.warning "-partial-match"] addrinfo :: _ =
+      getaddrinfo addr (Int.to_string port) [AI_SOCKTYPE SOCK_STREAM] in
+    let socket = Lwt_unix.socket ~cloexec:true addrinfo.ai_family addrinfo.ai_socktype addrinfo.ai_protocol in
+    let () = Lwt_unix.setsockopt socket SO_REUSEADDR true in
+    let mode = `TCP (`Socket socket) in
+    let callback = Server.callback in
+    let () = Lwt.async (fun () -> Lwt_unix.bind socket addrinfo.ai_addr) in
+    let () = Lwt_unix.listen socket 20 in
+    let thread = Cohttp_lwt_unix.Server.create ~mode (Cohttp_lwt_unix.Server.make ~callback ()) in
+    [thread]
+
+let listen_prometheus_addr =
+  let open! Cmdliner in
+  let doc =
+    Arg.info ~docs:"MONITORING OPTIONS" ~docv:"ADDR" ~doc:
+      "Ip address on which to provide Prometheus metrics over HTTP."
+      ["listen-prometheus-addr"]
+  in
+  Arg.(value @@ opt (some string) None doc)
 
 let listen_prometheus =
   let open! Cmdliner in
@@ -63,7 +87,9 @@ let listen_prometheus =
   in
   Arg.(value @@ opt (some int) None doc)
 
-let opts = listen_prometheus
+let opts =
+  let combine port addr = { port; addr } in
+    Cmdliner.Term.(const combine $ listen_prometheus $ listen_prometheus_addr)
 
 let () =
   let add (info, collector) =
