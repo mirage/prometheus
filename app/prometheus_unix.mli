@@ -25,6 +25,10 @@ val opts : config Cmdliner.Term.t
 (** [opts] is the extra command-line options to offer Prometheus
     monitoring. *)
 
+val config : int -> config
+(** [config port] creates a new configuration for the metrics server.
+    Metrics will be served on port [port]. *)
+
 (** Report metrics for messages logged. *)
 module Logging : sig
   val init :
