@@ -60,12 +60,12 @@ let serve config = match config.port, config.addr with
     let open! Unix in
     let [@ocaml.warning "-partial-match"] addrinfo :: _ =
       getaddrinfo addr (Int.to_string port) [AI_SOCKTYPE SOCK_STREAM] in
-    let socket = Lwt_unix.socket ~cloexec:true addrinfo.ai_family addrinfo.ai_socktype addrinfo.ai_protocol in
-    let () = Lwt_unix.setsockopt socket SO_REUSEADDR true in
-    let mode = `TCP (`Socket socket) in
+    let socket = socket ~cloexec:true addrinfo.ai_family addrinfo.ai_socktype addrinfo.ai_protocol in
+    let () = setsockopt socket SO_REUSEADDR true in
     let callback = Server.callback in
-    let () = Lwt.async (fun () -> Lwt_unix.bind socket addrinfo.ai_addr) in
-    let () = Lwt_unix.listen socket 20 in
+    let () = listen socket 20 in
+    let () = bind socket addrinfo.ai_addr in
+    let mode = `TCP (`Socket (Lwt_unix.of_unix_file_descr socket)) in
     let thread = Cohttp_lwt_unix.Server.create ~mode (Cohttp_lwt_unix.Server.make ~callback ()) in
     [thread]
 
