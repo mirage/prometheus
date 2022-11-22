@@ -42,26 +42,46 @@ module Unix_runtime = struct
   ]
 end
 
-type config = int option
+type config = string option
 
 module Server = Prometheus_app.Cohttp(Cohttp_lwt_unix.Server)
 
-let serve = function
-  | None -> []
-  | Some port ->
-    let mode = `TCP (`Port port) in
+let bind addr port =
+    let open! Unix in
+    let [@ocaml.warning "-partial-match"] addrinfo :: _ =
+      getaddrinfo addr port [AI_SOCKTYPE SOCK_STREAM] in
+    let socket = socket ~cloexec:true addrinfo.ai_family addrinfo.ai_socktype addrinfo.ai_protocol in
+    let () = setsockopt socket SO_REUSEADDR true in
     let callback = Server.callback in
+    let () = bind socket addrinfo.ai_addr in
+    let () = listen socket 20 in
+    let mode = `TCP (`Socket (Lwt_unix.of_unix_file_descr socket)) in
     let thread = Cohttp_lwt_unix.Server.create ~mode (Cohttp_lwt_unix.Server.make ~callback ()) in
     [thread]
+
+let serve config =
+  let addr = "0.0.0.0" in
+  let port = "9090" in
+  match config with
+  | None -> []
+  | Some config_s ->
+    try
+      match (String.split_on_char ':' config_s) with
+      | [] -> bind addr port
+      | port :: [] -> bind addr port
+      | addr :: port :: [] -> bind addr port
+    with
+      | Match_failure _ -> Printf.printf "ERROR: Incorrect addr:port pair specified, prometheus listener not starting.\n"; flush_all (); []
+      [@@ocaml.warning "-partial-match"]
 
 let listen_prometheus =
   let open! Cmdliner in
   let doc =
-    Arg.info ~docs:"MONITORING OPTIONS" ~docv:"PORT" ~doc:
-      "Port on which to provide Prometheus metrics over HTTP."
+    Arg.info ~docs:"MONITORING OPTIONS" ~docv:"ADDR_PORT" ~doc:
+      "Address and port on which to provide Prometheus metrics over HTTP."
       ["listen-prometheus"]
   in
-  Arg.(value @@ opt (some int) None doc)
+  Arg.(value @@ opt (some string) None doc)
 
 let opts = listen_prometheus
 
