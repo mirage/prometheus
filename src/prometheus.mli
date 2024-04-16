@@ -146,14 +146,14 @@ module Gauge : sig
 
   val inc_one : t -> unit
   val inc : t -> float -> unit
-  (** [inc t v] increases the current value of the guage by [v]. *)
+  (** [inc t v] increases the current value of the gauge by [v]. *)
 
   val dec_one : t -> unit
   val dec : t -> float -> unit
-  (** [dec t v] decreases the current value of the guage by [v]. *)
+  (** [dec t v] decreases the current value of the gauge by [v]. *)
 
   val set : t -> float -> unit
-  (** [set t v] sets the current value of the guage to [v]. *)
+  (** [set t v] sets the current value of the gauge to [v]. *)
 
   val track_inprogress : t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
   (** [track_inprogress t f] increases the value of the gauge by one while [f ()] is running. *)
