@@ -65,6 +65,8 @@ let listen_prometheus =
 
 let opts = listen_prometheus
 
+let config port = Some port
+
 let () =
   let add (info, collector) =
     CollectorRegistry.(register default) info collector in
