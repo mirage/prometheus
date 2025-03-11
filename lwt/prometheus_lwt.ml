@@ -29,6 +29,9 @@ module CollectorRegistry = struct
       failwith (Format.asprintf "%a already registered" MetricName.pp info.MetricInfo.name);
     t.metrics_lwt <- MetricFamilyMap.add info collector t.metrics_lwt
 
+  let unregister t info =
+    t.metrics_lwt <- MetricFamilyMap.remove info t.metrics_lwt
+
   open Lwt.Infix
 
   let map_p m =

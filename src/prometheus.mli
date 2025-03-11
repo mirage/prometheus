@@ -115,6 +115,9 @@ module CollectorRegistry : sig
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)
 
+  val unregister : t -> MetricInfo.t -> unit
+  (** [unregister t metric] removes [metric] from the set of metrics being collected. *)
+
   val register_pre_collect : t -> (unit -> unit) -> unit
   (** [register_pre_collect t fn] arranges for [fn ()] to be called at the start
       of each collection. This is useful if one expensive call provides

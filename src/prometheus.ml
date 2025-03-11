@@ -132,6 +132,9 @@ module CollectorRegistry = struct
     ensure_not_registered t info;
     t.metrics <- MetricFamilyMap.add info collector t.metrics
 
+  let unregister t info =
+    t.metrics <- MetricFamilyMap.remove info t.metrics
+
   let collect t =
     if !gettime == dummy_gettime then
       invalid_arg "CollectorRegistry.collect called, but Prometheus.init hasn't been called";

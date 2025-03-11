@@ -24,6 +24,10 @@ module CollectorRegistry : sig
   (** [register t info collector] registers a collector that may suspend
       before producing its samples. *)
 
+  val unregister : t -> Prometheus.MetricInfo.t -> unit
+  (** [unregister t info] removes the suspending collector for [info] from the
+      set of metrics being collected. *)
+
   val register_pre_collect : t -> (unit -> unit Lwt.t) -> unit
   (** [register_pre_collect t f] arranges for [f ()] to run at the start
       of each collection. *)
