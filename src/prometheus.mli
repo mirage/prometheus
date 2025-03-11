@@ -146,6 +146,16 @@ module type METRIC = sig
       you may wish to write a wrapper function with labelled arguments to avoid mistakes.
       If this is called multiple times with the same set of values, the existing metric will be returned. *)
 
+  val unregister_labels : family -> string list -> unit
+  (** [unregister_labels family label_values] unregisters the metric in [family] with these values
+      for the labels. The order of the values must be the same as the order of the [label_names]
+      passed to [v_labels]; you may wish to write a wrapper function with labelled arguments to
+      avoid mistakes.
+
+      Note that any metric value previously obtained from {!labels} for these label values becomes
+      detached by this call. Updates to such a stale value are silently ignored, and later calls
+      to {!labels} with the same label values will create a fresh metric starting from zero. *)
+
   val v_label : label_name:string -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> (string -> t)
   (** [v_label] is a convenience wrapper around [v_labels] for the case where there is a single label.
       The result is a function from the single label's value to the metric. *)
