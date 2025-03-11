@@ -120,9 +120,15 @@ module CollectorRegistry = struct
     ensure_not_registered t info;
     t.metrics <- MetricFamilyMap.add info collector t.metrics
 
+  let unregister t info =
+    t.metrics <- MetricFamilyMap.remove info t.metrics
+
   let register_lwt t info collector =
     ensure_not_registered t info;
     t.metrics_lwt <- MetricFamilyMap.add info collector t.metrics_lwt
+
+  let unregister_lwt t info =
+    t.metrics_lwt <- MetricFamilyMap.remove info t.metrics_lwt
 
   open Lwt.Infix
 

@@ -89,9 +89,15 @@ module CollectorRegistry : sig
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)
 
+  val unregister : t -> MetricInfo.t -> unit
+  (** [unregister t metric] removes [metric] from the set of metrics being collected. *)
+
   val register_lwt : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t Lwt.t) -> unit
   (** [register_lwt t metric collector] is the same as [register t metrics collector]
       but [collector] returns [Sample_set.t LabelSetMap.t Lwt.t]. *)
+
+  val unregister_lwt : t -> MetricInfo.t -> unit
+  (** [unregister_lwt t metric] removes [metric] from the set of metrics being collected. *)
 
   val register_pre_collect : t -> (unit -> unit) -> unit
   (** [register_pre_collect t fn] arranges for [fn ()] to be called at the start
