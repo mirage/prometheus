@@ -1,3 +1,12 @@
+## v1.3 (2025-12-08)
+
+- Make help / type information be OpenMetrics compatible (@Nymphium @tmcgilchrist #47).  
+  e.g. using `# TYPE` rather than `#TYPE` in the output.
+
+- Minor documentation fixes (@tmcgilchrist @vch9 #50 #53).
+
+- Make default `Makefile` target run tests (@talex5 #49).
+
 ## v1.2 (2022-06-16)
 
 - Add lwt collectors and pre-collectors (@killian-delarue, #43).
