@@ -1,0 +1,33 @@
+opam-version: "2.0"
+synopsis: "Client library for Prometheus monitoring"
+description: """\
+Applications can enable metric reporting using the `prometheus-reporter` opam package.
+
+The `prometheus-reporter.unix` ocamlfind library provides the `Prometheus_reporter_unix` module,
+which includes a cmdliner option.
+See the `examples/example.ml` program for an example, which can be run as:
+
+Unikernels can use `Prometheus_reporter` instead of `Prometheus_reporter_unix` to avoid the `Unix` dependency."""
+maintainer: "talex5@gmail.com"
+authors: ["Thomas Leonard" "David Scott"]
+license: "Apache-2.0"
+homepage: "https://github.com/mirage/prometheus"
+doc: "https://mirage.github.io/prometheus/"
+bug-reports: "https://github.com/mirage/prometheus/issues"
+depends: [
+  "ocaml" {>= "4.02.3"}
+  "dune" {>= "1.0"}
+  "prometheus" {= version}
+  "fmt" {>= "0.8.7"}
+  "re"
+  "lwt" {>= "2.5.0"}
+  "cmdliner"
+  "alcotest" {with-test}
+  "astring"
+  "logs" {>= "0.6.0"}
+]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/prometheus.git"
