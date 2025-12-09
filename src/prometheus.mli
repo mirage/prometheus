@@ -85,6 +85,11 @@ module CollectorRegistry : sig
   val collect : t -> snapshot Lwt.t
   (** Read the current value of each metric. *)
 
+  val collect_non_lwt: t -> snapshot
+  (** Read the current value of each metric. To be used in non-Lwt contexts, as
+      it doesn't evaluate collectors registered with [register_lwt] or functions
+      registered with [register_pre_collect_lwt] *)
+
   val register : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)

@@ -133,6 +133,11 @@ module CollectorRegistry = struct
       (fun acc (k, v) -> v >|= fun v -> MetricFamilyMap.add k v acc)
       MetricFamilyMap.empty
 
+  let collect_non_lwt t =
+    List.iter (fun f -> f ()) t.pre_collect;
+    let metrics = MetricFamilyMap.map (fun f -> f ()) t.metrics in
+    metrics
+
   let collect t =
     List.iter (fun f -> f ()) t.pre_collect;
     Lwt_list.iter_p (fun f -> f ()) t.pre_collect_lwt >>= fun () ->
