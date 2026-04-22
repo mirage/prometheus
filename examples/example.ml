@@ -1,10 +1,8 @@
-(** Run this with [example.native --listen-prometheus=9090].
+(** Run this with [example.exe --listen-prometheus=9090].
     View the metrics with:
 
     curl http://localhost:9090/metrics
    *)
-
-open Lwt.Infix
 
 module Metrics = struct
   open Prometheus
@@ -17,15 +15,16 @@ module Metrics = struct
     Counter.v ~help ~namespace ~subsystem "ticks_counted_total"
 end
 
-let rec counter () =
-  Lwt_unix.sleep 1.0 >>= fun () ->
+let rec counter ~clock () =
+  Eio.Time.sleep clock 1.0;
   print_endline "Tick!";
   Prometheus.Counter.inc_one Metrics.ticks_counted_total;
-  counter ()
+  counter ~clock ()
 
-let main prometheus_config =
-  let threads = counter () :: Prometheus_unix.serve prometheus_config in
-  Lwt_main.run (Lwt.choose threads)
+let main env prometheus_config =
+  Eio.Switch.run @@ fun sw ->
+  Prometheus_unix.serve ~sw ~net:(Eio.Stdenv.net env) prometheus_config;
+  counter ~clock:(Eio.Stdenv.clock env) ()
 
 open Cmdliner
 
@@ -34,13 +33,15 @@ let () =
   Prometheus_unix.Logging.init ()
     ~default_level:Logs.Debug
     ~levels:[
-      "cohttp.lwt.io", Logs.Info;
+      "cohttp.eio", Logs.Info;
     ]
 
 let () =
   Logs.info (fun f -> f "Logging initialised.");
   print_endline "If run with the option --listen-prometheus=9090, this program serves metrics at\n\
                  http://localhost:9090/metrics";
+  Eio_main.run @@ fun env ->
   let info = Cmd.info "example" in
-  let cmd = Cmd.v info Term.(const main $ Prometheus_unix.opts) in
+  let term = Cmdliner.Term.app (Cmdliner.Term.const (main env)) Prometheus_unix.opts in
+  let cmd = Cmd.v info term in
   exit @@ Cmd.eval cmd

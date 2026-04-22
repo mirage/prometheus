@@ -2,8 +2,6 @@ open! Astring
 open Prometheus
 open Prometheus_app
 
-open Lwt.Infix
-
 let test_metrics () =
   let registry = CollectorRegistry.create () in
   let requests =
@@ -17,7 +15,7 @@ let test_metrics () =
   Counter.inc post_login 2.;
   let post_login2 = Counter.labels requests ["POST"; "/login"] in
   Counter.inc_one post_login2;
-  CollectorRegistry.collect registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -30,7 +28,10 @@ let test_metrics () =
     "
     output
 
-let test_lwt_collectors () =
+(* Collectors may now perform IO (via effects) directly. This test exercises a
+   collector that yields to the scheduler before returning, to confirm that
+   [collect] handles suspension correctly. *)
+let test_effectful_collectors () =
   let registry = CollectorRegistry.create () in
   let register_counter ~name ~help value =
     let metric_info = {
@@ -41,15 +42,14 @@ let test_lwt_collectors () =
     }
     in
     let collector () =
-      Lwt.pause () >|= fun () ->
+      Eio.Fiber.yield ();
       LabelSetMap.singleton [] [Prometheus.Sample_set.sample value]
     in
-    CollectorRegistry.register_lwt registry metric_info collector
+    CollectorRegistry.register registry metric_info collector
   in
-  (* Test register_lwt *)
   register_counter ~name:"counter_1" ~help:"The first counter" 1.0;
   register_counter ~name:"counter_2" ~help:"The second counter" 2.0;
-  CollectorRegistry.collect registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP counter_1 The first counter\n\
@@ -75,7 +75,7 @@ let test_histogram () =
   let bar = H.labels requests ["PUT"; "/bar"] in
   H.observe foo 0.12;
   H.observe bar 0.33;
-  CollectorRegistry.collect registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -91,6 +91,21 @@ let test_histogram () =
      dkci_tests_requests_bucket{le=\"0.500000\", method=\"PUT\", path=\"/bar\"} 1.000000\n\
      dkci_tests_requests_bucket{le=\"0.250000\", method=\"PUT\", path=\"/bar\"} 0.000000\n\
     "
+    output
+
+(* [track_inprogress] must decrement the gauge even when the inner function raises. *)
+let test_track_inprogress_on_raise () =
+  let registry = CollectorRegistry.create () in
+  let g = Gauge.v ~registry ~help:"in-flight" "in_flight" in
+  Gauge.inc_one g;
+  (try Gauge.track_inprogress g (fun () -> failwith "boom")
+   with Failure _ -> ());
+  let collected = CollectorRegistry.collect registry in
+  let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
+  Alcotest.(check string) "Gauge restored after raise"
+    "# HELP in_flight in-flight\n\
+     # TYPE in_flight gauge\n\
+     in_flight 1.000000\n"
     output
 
 (* "^[a-zA-Z_][a-zA-Z0-9_]*$" *)
@@ -121,11 +136,11 @@ let check_invalid_label label () =
     failwith (label ^ " should be an invalid label")
 
 let test_valid_labels_set = List.map (fun label ->
-  label, `Quick, fun () -> Lwt.return @@ check_valid_label label ()
+  label, `Quick, check_valid_label label
 ) valid_labels
 
 let test_invalid_labels_set = List.map (fun label ->
-  label, `Quick, fun () -> Lwt.return @@ check_invalid_label label ()
+  label, `Quick, check_invalid_label label
 ) invalid_labels
 
 let check_valid_metric metric () =
@@ -156,21 +171,23 @@ let invalid_metrics = [
 ]
 
 let test_valid_metrics_set = List.map (fun metric ->
-  metric, `Quick, fun () -> Lwt.return @@ check_valid_metric metric ()
+  metric, `Quick, check_valid_metric metric
 ) valid_metrics
 
 let test_invalid_metrics_set = List.map (fun metric ->
-  metric, `Quick, fun () -> Lwt.return @@ check_invalid_metric metric ()
+  metric, `Quick, check_invalid_metric metric
 ) invalid_metrics
 
 let test_set = [
   "Metrics", `Quick, test_metrics;
-  "Lwt collectors",`Quick, test_lwt_collectors;
+  "Effectful collectors", `Quick, test_effectful_collectors;
   "Histogram", `Quick, test_histogram;
+  "Gauge track_inprogress on raise", `Quick, test_track_inprogress_on_raise;
 ]
 
 let () =
-  Lwt_main.run @@ Alcotest_lwt.run "prometheus" [
+  Eio_main.run @@ fun _env ->
+  Alcotest.run "prometheus" [
     "main", test_set;
     "valid_labels", test_valid_labels_set;
     "invalid_labels", test_invalid_labels_set;

@@ -44,15 +44,18 @@ end
 
 type config = int option
 
-module Server = Prometheus_app.Cohttp(Cohttp_lwt_unix.Server)
+let log_error ex = Logs.warn (fun f -> f "%a" Eio.Exn.pp ex)
 
-let serve = function
-  | None -> []
+let serve ~sw ~net = function
+  | None -> ()
   | Some port ->
-    let mode = `TCP (`Port port) in
-    let callback = Server.callback in
-    let thread = Cohttp_lwt_unix.Server.create ~mode (Cohttp_lwt_unix.Server.make ~callback ()) in
-    [thread]
+    let addr = `Tcp (Eio.Net.Ipaddr.V4.any, port) in
+    let socket = Eio.Net.listen ~sw ~backlog:128 ~reuse_addr:true net addr in
+    let server =
+      Cohttp_eio.Server.make ~callback:Prometheus_app.callback ()
+    in
+    Eio.Fiber.fork ~sw (fun () ->
+        Cohttp_eio.Server.run socket server ~on_error:log_error)
 
 let listen_prometheus =
   let open! Cmdliner in

@@ -1,8 +1,8 @@
 opam-version: "2.0"
-synopsis: "Client library for Prometheus monitoring"
+synopsis: "Report metrics for Prometheus using Cohttp and Eio"
 description: """\
 Applications can enable metric reporting using the `prometheus-app` opam package.
-This depends on cohttp and can serve the metrics collected above over HTTP.
+This depends on cohttp-eio and can serve the metrics collected above over HTTP.
 
 The `prometheus-app.unix` ocamlfind library provides the `Prometheus_unix` module,
 which includes a cmdliner option and pre-configured web-server.
@@ -25,17 +25,16 @@ homepage: "https://github.com/mirage/prometheus"
 doc: "https://mirage.github.io/prometheus/"
 bug-reports: "https://github.com/mirage/prometheus/issues"
 depends: [
-  "ocaml" {>= "4.08"}
+  "ocaml" {>= "5.0"}
   "dune" {>= "2.3"}
   "prometheus" {= version}
   "fmt" {>= "0.8.7"}
   "re"
-  "cohttp-lwt" {>= "4.0.0"}
-  "cohttp-lwt-unix" {>= "4.0.0"}
-  "lwt" {>= "2.5.0"}
+  "cohttp-eio" {>= "6.0.0"}
+  "eio" {>= "1.0"}
+  "eio_main" {with-test}
   "cmdliner"
   "alcotest" {with-test}
-  "alcotest-lwt" {with-test}
   "asetmap"
   "astring"
   "logs" {>= "0.6.0"}

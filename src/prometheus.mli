@@ -5,7 +5,8 @@
     Notes:
 
     - The Prometheus docs require that client libraries are thread-safe. We interpret this to mean safe
-      with Lwt threads, NOT with native threading.
+      under OCaml 5 effect-based schedulers such as Eio running on a single domain, NOT with native
+      multi-domain threading.
 
     - This library is intended to be a dependency of any library that might need to report metrics,
       even though many applications will not enable it. Therefore it should have minimal dependencies.
@@ -82,24 +83,20 @@ module CollectorRegistry : sig
   val default : t
   (** The default registry. *)
 
-  val collect : t -> snapshot Lwt.t
-  (** Read the current value of each metric. *)
+  val collect : t -> snapshot
+  (** Read the current value of each metric.
+      Collectors may perform IO (via effects) while this runs. *)
 
   val register : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
-      It will call [collector ()] to collect the values each time [collect] is called. *)
-
-  val register_lwt : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t Lwt.t) -> unit
-  (** [register_lwt t metric collector] is the same as [register t metrics collector]
-      but [collector] returns [Sample_set.t LabelSetMap.t Lwt.t]. *)
+      It will call [collector ()] to collect the values each time [collect] is called.
+      [collector] may perform IO via effects (e.g. Eio operations). *)
 
   val register_pre_collect : t -> (unit -> unit) -> unit
   (** [register_pre_collect t fn] arranges for [fn ()] to be called at the start
       of each collection. This is useful if one expensive call provides
-      information about multiple metrics. *)
-
-  val register_pre_collect_lwt : t -> (unit -> unit Lwt.t) -> unit
-  (** [register_pre_collect t fn] same as [register_pre_collect] but [fn] returns [unit Lwt.t]. *)
+      information about multiple metrics.
+      [fn] may perform IO via effects. *)
 end
 (** A collection of metric reporters. Usually, only {!CollectorRegistry.default} is used. *)
 
@@ -155,13 +152,13 @@ module Gauge : sig
   val set : t -> float -> unit
   (** [set t v] sets the current value of the gauge to [v]. *)
 
-  val track_inprogress : t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [track_inprogress t f] increases the value of the gauge by one while [f ()] is running. *)
+  val track_inprogress : t -> (unit -> 'a) -> 'a
+  (** [track_inprogress t f] increases the value of the gauge by one while [f ()] is running.
+      The gauge is decremented even if [f] raises. *)
 
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  val time : t -> (unit -> float) -> (unit -> 'a) -> 'a
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
-      increases the metric by the difference.
-  *)
+      increases the metric by the difference. The metric is updated even if [f] raises. *)
 end
 (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
 
@@ -171,9 +168,9 @@ module Summary : sig
   val observe : t -> float -> unit
   (** [observe t v] increases the total by [v] and the count by one. *)
 
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  val time : t -> (unit -> float) -> (unit -> 'a) -> 'a
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
-      observes the difference. *)
+      observes the difference. The observation is recorded even if [f] raises. *)
 end
 (** A summary is a metric that records both the number of readings and their total.
     This allows calculating the average. *)
@@ -204,9 +201,9 @@ module type HISTOGRAM = sig
   val observe : t -> float -> unit
   (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum. *)
 
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  val time : t -> (unit -> float) -> (unit -> 'a) -> 'a
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
-      observes the difference. *)
+      observes the difference. The observation is recorded even if [f] raises. *)
 end
 
 module Histogram (Buckets : sig val spec : Histogram_spec.t end) : HISTOGRAM

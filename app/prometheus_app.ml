@@ -143,20 +143,17 @@ module Runtime = struct
   ]
 end
 
-open Lwt.Infix
-
-module Cohttp(Server : Cohttp_lwt.S.Server) = struct
-  let callback _conn req _body =
-    let open Cohttp in
-    let uri = Request.uri req in
-    match Request.meth req, Uri.path uri with
-    | `GET, "/metrics" ->
-      Prometheus.CollectorRegistry.(collect default) >>= fun data ->
-      let body = Fmt.to_to_string TextFormat_0_0_4.output data in
-      let headers = Header.init_with "Content-Type" "text/plain; version=0.0.4" in
-      Server.respond_string ~status:`OK ~headers ~body ()
-    | _ -> Server.respond_error ~status:`Bad_request ~body:"Bad request" ()
-end
+let callback _conn req _body =
+  let open Cohttp in
+  let uri = Request.uri req in
+  match Request.meth req, Uri.path uri with
+  | `GET, "/metrics" ->
+    let data = Prometheus.CollectorRegistry.(collect default) in
+    let body = Fmt.to_to_string TextFormat_0_0_4.output data in
+    let headers = Header.init_with "Content-Type" "text/plain; version=0.0.4" in
+    Cohttp_eio.Server.respond_string ~status:`OK ~headers ~body ()
+  | _ ->
+    Cohttp_eio.Server.respond_string ~status:`Bad_request ~body:"Bad request" ()
 
 let () =
   CollectorRegistry.(register_pre_collect default) Runtime.update;

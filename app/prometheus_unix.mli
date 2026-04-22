@@ -11,15 +11,16 @@
       GC statistics, as recommended by Prometheus.
 
     - This extends [Prometheus_app] with support for cmdliner option parsing, a server pre-configured
-      for Unix, and a start-time metric that uses [Unix.gettimeofday].
+      for Eio-based applications, and a start-time metric that uses [Unix.gettimeofday].
  *)
 
 type config
 
-val serve : config -> unit Lwt.t list
-(** [serve config] starts a Cohttp server according to config.
-    It returns a singleton list containing the thread to monitor,
-    or an empty list if no server is configured. *)
+val serve : sw:Eio.Switch.t -> net:_ Eio.Net.t -> config -> unit
+(** [serve ~sw ~net config] starts a Cohttp-Eio server exposing the collected
+    metrics at [/metrics], if [config] specifies a port. The server is forked
+    onto [sw] and stops when [sw] is released. It is a no-op if no port was
+    configured. *)
 
 val opts : config Cmdliner.Term.t
 (** [opts] is the extra command-line options to offer Prometheus
@@ -47,7 +48,7 @@ module Logging : sig
         Prometheus_unix.Logging.init ()
           ~default_level:Logs.Debug
           ~levels:[
-            "cohttp.lwt.io", Logs.Info;
+            "cohttp.eio", Logs.Info;
           ]
       ]}
       @param default_level The default log-level to use (default {!Logs.Info}).
