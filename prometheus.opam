@@ -7,7 +7,7 @@ homepage: "https://github.com/mirage/prometheus"
 doc: "https://mirage.github.io/prometheus/"
 bug-reports: "https://github.com/mirage/prometheus/issues"
 depends: [
-  "ocaml" {>= "5.0"}
+  "ocaml" {>= "4.08"}
   "dune" {>= "2.3"}
   "astring"
   "asetmap"

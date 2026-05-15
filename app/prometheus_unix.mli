@@ -16,11 +16,23 @@
 
 type config
 
-val serve : sw:Eio.Switch.t -> net:_ Eio.Net.t -> config -> unit
-(** [serve ~sw ~net config] starts a Cohttp-Eio server exposing the collected
-    metrics at [/metrics], if [config] specifies a port. The server is forked
-    onto [sw] and stops when [sw] is released. It is a no-op if no port was
-    configured. *)
+val serve :
+  ?backlog:int ->
+  ?addr:Eio.Net.Ipaddr.v4v6 ->
+  net:_ Eio.Net.t ->
+  config ->
+  (unit -> unit) list
+(** [serve ~net config] returns a (possibly empty) list of fiber bodies, each
+    of which serves the Prometheus metrics endpoint at [/metrics] when run.
+
+    Compose them with your application work using {!Eio.Fiber.all} or
+    {!Eio.Fiber.fork}. Each fiber owns its listening socket via an internal
+    switch; cancelling the fiber closes the socket and shuts the server down.
+
+    @param backlog Maximum length of the pending-connection queue. Default [128].
+    @param addr Address to bind to. Default {!Eio.Net.Ipaddr.V4.any} (all IPv4
+                interfaces). Pass {!Eio.Net.Ipaddr.V6.any} for IPv6.
+    @return An empty list if [config] specifies no port; otherwise a singleton. *)
 
 val opts : config Cmdliner.Term.t
 (** [opts] is the extra command-line options to offer Prometheus
@@ -48,7 +60,7 @@ module Logging : sig
         Prometheus_unix.Logging.init ()
           ~default_level:Logs.Debug
           ~levels:[
-            "cohttp.eio", Logs.Info;
+            "cohttp.eio.io", Logs.Info;
           ]
       ]}
       @param default_level The default log-level to use (default {!Logs.Info}).

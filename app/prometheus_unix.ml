@@ -46,16 +46,20 @@ type config = int option
 
 let log_error ex = Logs.warn (fun f -> f "%a" Eio.Exn.pp ex)
 
-let serve ~sw ~net = function
-  | None -> ()
+let serve
+    ?(backlog = 128)
+    ?(addr = (Eio.Net.Ipaddr.V4.any :> Eio.Net.Ipaddr.v4v6))
+    ~net = function
+  | None -> []
   | Some port ->
-    let addr = `Tcp (Eio.Net.Ipaddr.V4.any, port) in
-    let socket = Eio.Net.listen ~sw ~backlog:128 ~reuse_addr:true net addr in
-    let server =
-      Cohttp_eio.Server.make ~callback:Prometheus_app.callback ()
+    let sockaddr = `Tcp (addr, port) in
+    let run () =
+      Eio.Switch.run @@ fun sw ->
+      let socket = Eio.Net.listen ~sw ~backlog ~reuse_addr:true net sockaddr in
+      let server = Cohttp_eio.Server.make ~callback:Prometheus_app.callback () in
+      Cohttp_eio.Server.run socket server ~on_error:log_error
     in
-    Eio.Fiber.fork ~sw (fun () ->
-        Cohttp_eio.Server.run socket server ~on_error:log_error)
+    [run]
 
 let listen_prometheus =
   let open! Cmdliner in

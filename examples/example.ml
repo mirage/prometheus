@@ -15,16 +15,18 @@ module Metrics = struct
     Counter.v ~help ~namespace ~subsystem "ticks_counted_total"
 end
 
-let rec counter ~clock () =
-  Eio.Time.sleep clock 1.0;
-  print_endline "Tick!";
-  Prometheus.Counter.inc_one Metrics.ticks_counted_total;
-  counter ~clock ()
+let counter ~clock () =
+  while true do
+    Eio.Time.sleep clock 1.0;
+    print_endline "Tick!";
+    Prometheus.Counter.inc_one Metrics.ticks_counted_total
+  done
 
 let main env prometheus_config =
-  Eio.Switch.run @@ fun sw ->
-  Prometheus_unix.serve ~sw ~net:(Eio.Stdenv.net env) prometheus_config;
-  counter ~clock:(Eio.Stdenv.clock env) ()
+  let net = Eio.Stdenv.net env in
+  let clock = Eio.Stdenv.clock env in
+  Eio.Fiber.all
+    ((fun () -> counter ~clock ()) :: Prometheus_unix.serve ~net prometheus_config)
 
 open Cmdliner
 
@@ -33,15 +35,14 @@ let () =
   Prometheus_unix.Logging.init ()
     ~default_level:Logs.Debug
     ~levels:[
-      "cohttp.eio", Logs.Info;
+      "cohttp.eio.io", Logs.Info;
     ]
 
 let () =
   Logs.info (fun f -> f "Logging initialised.");
   print_endline "If run with the option --listen-prometheus=9090, this program serves metrics at\n\
                  http://localhost:9090/metrics";
-  Eio_main.run @@ fun env ->
+  Eio_main.run @@ fun eio_env ->
   let info = Cmd.info "example" in
-  let term = Cmdliner.Term.app (Cmdliner.Term.const (main env)) Prometheus_unix.opts in
-  let cmd = Cmd.v info term in
+  let cmd = Cmd.v info Term.(const (main eio_env) $ Prometheus_unix.opts) in
   exit @@ Cmd.eval cmd
