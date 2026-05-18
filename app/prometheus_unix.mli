@@ -7,14 +7,24 @@
     - This module is intended to be used by applications that export Prometheus metrics.
       Libraries should only link against the `Prometheus` module.
 
-    - This module automatically initialises itself and registers some standard collectors relating to
-      GC statistics, as recommended by Prometheus.
+    - Applications must call {!init} once, inside [Eio_main.run], to register the
+      Unix-specific runtime metrics (e.g. [process_start_time_seconds]). The GC
+      statistics in {!Prometheus_app} are still registered automatically at
+      module load.
 
     - This extends [Prometheus_app] with support for cmdliner option parsing, a server pre-configured
-      for Eio-based applications, and a start-time metric that uses [Unix.gettimeofday].
+      for Eio-based applications, and a start-time metric that uses {!Eio.Time.now}.
  *)
 
 type config
+
+val init : clock:_ Eio.Time.clock -> unit -> unit
+(** [init ~clock ()] registers the Unix-specific runtime metrics
+    ([process_start_time_seconds]) against
+    {!Prometheus.CollectorRegistry.default}. The start time is captured from
+    [clock] at the moment of the call, so this should be invoked early in the
+    program's lifetime, inside [Eio_main.run]. Call once: a second call will
+    raise because the metric is already registered. *)
 
 val serve :
   ?backlog:int ->
@@ -41,28 +51,27 @@ val opts : config Cmdliner.Term.t
 (** Report metrics for messages logged. *)
 module Logging : sig
   val init :
+    clock:_ Eio.Time.clock ->
     ?default_level:Logs.level ->
     ?levels:(string * Logs.level) list ->
     ?formatter:Format.formatter ->
     unit -> unit
   (** Initialise the Logs library with a reporter that reports prometheus metrics too.
       The reporter is configured to log to stderr and the log messages include a
-      timestamp and the event's source.
+      timestamp (sourced from [clock]) and the event's source.
 
-      A server will typically use the following code to initialise logging:
+      Call this from inside [Eio_main.run]:
       {[
-      let () = Prometheus_app.Logging.init ()
+      Eio_main.run @@ fun env ->
+      let clock = Eio.Stdenv.clock env in
+      Prometheus_unix.Logging.init ~clock ()
+        ~default_level:Logs.Debug
+        ~levels:[
+          "cohttp.eio.io", Logs.Info;
+        ];
+      ...
       ]}
-
-      Or:
-      {[
-      let () =
-        Prometheus_unix.Logging.init ()
-          ~default_level:Logs.Debug
-          ~levels:[
-            "cohttp.eio.io", Logs.Info;
-          ]
-      ]}
+      @param clock Used to source the timestamp shown on each log line.
       @param default_level The default log-level to use (default {!Logs.Info}).
       @param levels Provides levels for specific log sources.
       @param formatter A custom formatter (default {!Fmt.stderr}). *)

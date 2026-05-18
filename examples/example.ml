@@ -25,23 +25,21 @@ let counter ~clock () =
 let main env prometheus_config =
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
+  Prometheus_unix.Logging.init ~clock ()
+    ~default_level:Logs.Debug
+    ~levels:[
+      "cohttp.eio.io", Logs.Info;
+    ];
+  Prometheus_unix.init ~clock ();
+  Logs.info (fun f -> f "Logging initialised.");
+  print_endline "If run with the option --listen-prometheus=9090, this program serves metrics at\n\
+                 http://localhost:9090/metrics";
   Eio.Fiber.all
     ((fun () -> counter ~clock ()) :: Prometheus_unix.serve ~net prometheus_config)
 
 open Cmdliner
 
-(* Optional: configure logging *)
 let () =
-  Prometheus_unix.Logging.init ()
-    ~default_level:Logs.Debug
-    ~levels:[
-      "cohttp.eio.io", Logs.Info;
-    ]
-
-let () =
-  Logs.info (fun f -> f "Logging initialised.");
-  print_endline "If run with the option --listen-prometheus=9090, this program serves metrics at\n\
-                 http://localhost:9090/metrics";
   Eio_main.run @@ fun eio_env ->
   let info = Cmd.info "example" in
   let cmd = Cmd.v info Term.(const (main eio_env) $ Prometheus_unix.opts) in

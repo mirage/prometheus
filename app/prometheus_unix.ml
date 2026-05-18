@@ -17,8 +17,6 @@ module Metrics = struct
 end
 
 module Unix_runtime = struct
-  let start_time = Unix.gettimeofday ()
-
   let simple_metric ~metric_type ~help name fn =
     let info = {
       MetricInfo.
@@ -33,12 +31,9 @@ module Unix_runtime = struct
     in
     info, collect
 
-  let process_start_time_seconds =
+  let metrics ~start_time = [
     simple_metric ~metric_type:Counter "process_start_time_seconds" (fun () -> start_time)
-      ~help:"Start time of the process since unix epoch in seconds."
-
-  let metrics = [
-    process_start_time_seconds;
+      ~help:"Start time of the process since unix epoch in seconds.";
   ]
 end
 
@@ -72,10 +67,11 @@ let listen_prometheus =
 
 let opts = listen_prometheus
 
-let () =
+let init ~clock () =
+  let start_time = Eio.Time.now clock in
   let add (info, collector) =
     CollectorRegistry.(register default) info collector in
-  List.iter add Unix_runtime.metrics
+  List.iter add (Unix_runtime.metrics ~start_time)
 
 module Logging = struct
   let inc_counter = Metrics.inc_messages
@@ -86,14 +82,14 @@ module Logging = struct
     Fmt.pf f "%04d-%02d-%02d %02d:%02d.%02d" (tm.tm_year + 1900) (tm.tm_mon + 1)
       tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
 
-  let reporter formatter =
+  let reporter ~clock formatter =
     let report src level ~over k msgf =
       let k _ = over (); k () in
       let src = Logs.Src.name src in
       Metrics.inc_messages level src;
       msgf @@ fun ?header ?tags:_ fmt ->
       Fmt.kpf k formatter ("%a %a %a @[" ^^ fmt ^^ "@]@.")
-        pp_timestamp (Unix.gettimeofday ())
+        pp_timestamp (Eio.Time.now clock)
         Fmt.(styled `Magenta string) (Printf.sprintf "%14s" src)
         Logs_fmt.pp_header (level, header)
     in
@@ -107,9 +103,9 @@ module Logging = struct
     in
     aux (Logs.Src.list ())
 
-  let init ?(default_level=Logs.Info) ?(levels=[]) ?(formatter=Fmt.stderr) () =
+  let init ~clock ?(default_level=Logs.Info) ?(levels=[]) ?(formatter=Fmt.stderr) () =
     Fmt_tty.setup_std_outputs ();
-    Logs.set_reporter (reporter formatter);
+    Logs.set_reporter (reporter ~clock formatter);
     Logs.set_level (Some default_level);
     List.iter set_level levels
 end
