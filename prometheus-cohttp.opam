@@ -1,0 +1,29 @@
+opam-version: "2.0"
+synopsis: "Backend-agnostic cohttp serving for Prometheus monitoring"
+description: """\
+A single functor over cohttp's backend-agnostic `Cohttp.Generic.Server.S`
+interface that serves Prometheus metrics at `/metrics`. Instantiate it with
+`cohttp-lwt`'s or `cohttp-eio`'s server module — the `prometheus-lwt` and
+`prometheus-eio` packages do exactly this.
+
+Depends only on the base `cohttp` package, so it pulls in neither Lwt nor Eio."""
+maintainer: "talex5@gmail.com"
+authors: ["Thomas Leonard" "David Scott"]
+license: "Apache-2.0"
+homepage: "https://github.com/mirage/prometheus"
+doc: "https://mirage.github.io/prometheus/"
+bug-reports: "https://github.com/mirage/prometheus/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "2.3"}
+  "prometheus" {= version}
+  "prometheus-app" {= version}
+  "cohttp" {>= "6.0.0"}
+  "http" {>= "6.0.0"}
+  "fmt" {>= "0.8.7"}
+]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/prometheus.git"

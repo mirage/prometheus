@@ -1,0 +1,35 @@
+opam-version: "2.0"
+synopsis: "Eio support for Prometheus monitoring"
+description: """\
+Serve Prometheus metrics from an Eio application, with no Lwt dependency.
+Provides direct-style timing helpers and a cohttp-eio handler. Asynchronous
+collection needs no special machinery under Eio: a collector may perform I/O
+directly and `Prometheus.CollectorRegistry.collect`, called from a fiber,
+suspends transparently.
+
+Metric recording lives in the backend-free `prometheus` core; this package
+is only needed by applications that serve metrics over Eio."""
+maintainer: "talex5@gmail.com"
+authors: ["Thomas Leonard" "David Scott"]
+license: "Apache-2.0"
+homepage: "https://github.com/mirage/prometheus"
+doc: "https://mirage.github.io/prometheus/"
+bug-reports: "https://github.com/mirage/prometheus/issues"
+depends: [
+  "ocaml" {>= "5.0"}
+  "dune" {>= "2.3"}
+  "prometheus" {= version}
+  "prometheus-app" {= version}
+  "prometheus-cohttp" {= version}
+  "fmt" {>= "0.8.7"}
+  "eio" {>= "1.0"}
+  "cohttp-eio" {>= "6.0.0"}
+  "http" {>= "6.0.0"}
+  "eio_main" {with-test}
+  "alcotest" {with-test}
+]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/prometheus.git"

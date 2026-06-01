@@ -18,10 +18,6 @@ module TextFormat_0_0_4 : sig
 end
 (** Format a snapshot in Prometheus's text format, version 0.0.4. *)
 
-module Cohttp (S : Cohttp_lwt.S.Server) : sig
-  val callback :
-    S.conn ->
-    Cohttp.Request.t ->
-    Cohttp_lwt.Body.t -> (Cohttp.Response.t * Cohttp_lwt.Body.t) Lwt.t
-end
-(** A Cohttp callback for a web-server that exposes the Prometheus metrics. *)
+(** This package is backend-agnostic: it renders snapshots and registers the
+    standard GC collectors, but does not serve them over HTTP. To expose metrics,
+    use [prometheus-lwt] (Lwt + cohttp-lwt) or [prometheus-eio] (Eio + cohttp-eio). *)

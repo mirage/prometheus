@@ -10,7 +10,7 @@
     - This module automatically initialises itself and registers some standard collectors relating to
       GC statistics, as recommended by Prometheus.
 
-    - This extends [Prometheus_app] with support for cmdliner option parsing, a server pre-configured
+    - This extends [Prometheus_lwt] with support for cmdliner option parsing, a server pre-configured
       for Unix, and a start-time metric that uses [Unix.gettimeofday].
  *)
 
@@ -38,13 +38,13 @@ module Logging : sig
 
       A server will typically use the following code to initialise logging:
       {[
-      let () = Prometheus_app.Logging.init ()
+      let () = Prometheus_lwt_unix.Logging.init ()
       ]}
 
       Or:
       {[
       let () =
-        Prometheus_unix.Logging.init ()
+        Prometheus_lwt_unix.Logging.init ()
           ~default_level:Logs.Debug
           ~levels:[
             "cohttp.lwt.io", Logs.Info;

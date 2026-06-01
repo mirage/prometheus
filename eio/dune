@@ -1,0 +1,6 @@
+(library
+ (name prometheus_eio)
+ (public_name prometheus-eio)
+ (libraries prometheus prometheus-app prometheus-cohttp eio cohttp-eio http fmt)
+ (modules Prometheus_eio)
+ (wrapped false))

@@ -24,14 +24,14 @@ let rec counter () =
   counter ()
 
 let main prometheus_config =
-  let threads = counter () :: Prometheus_unix.serve prometheus_config in
+  let threads = counter () :: Prometheus_lwt_unix.serve prometheus_config in
   Lwt_main.run (Lwt.choose threads)
 
 open Cmdliner
 
 (* Optional: configure logging *)
 let () =
-  Prometheus_unix.Logging.init ()
+  Prometheus_lwt_unix.Logging.init ()
     ~default_level:Logs.Debug
     ~levels:[
       "cohttp.lwt.io", Logs.Info;
@@ -42,5 +42,5 @@ let () =
   print_endline "If run with the option --listen-prometheus=9090, this program serves metrics at\n\
                  http://localhost:9090/metrics";
   let info = Cmd.info "example" in
-  let cmd = Cmd.v info Term.(const main $ Prometheus_unix.opts) in
+  let cmd = Cmd.v info Term.(const main $ Prometheus_lwt_unix.opts) in
   exit @@ Cmd.eval cmd

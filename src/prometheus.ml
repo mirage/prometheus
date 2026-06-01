@@ -98,60 +98,34 @@ end
 
 module CollectorRegistry = struct
   type t = {
-    mutable metrics     : (unit -> Sample_set.t LabelSetMap.t      ) MetricFamilyMap.t;
-    mutable metrics_lwt : (unit -> Sample_set.t LabelSetMap.t Lwt.t) MetricFamilyMap.t;
-    mutable pre_collect     : (unit -> unit      ) list;
-    mutable pre_collect_lwt : (unit -> unit Lwt.t) list;
+    mutable metrics     : (unit -> Sample_set.t LabelSetMap.t) MetricFamilyMap.t;
+    mutable pre_collect : (unit -> unit) list;
   }
 
   type snapshot = Sample_set.t LabelSetMap.t MetricFamilyMap.t
 
   let create () = {
     metrics = MetricFamilyMap.empty;
-    metrics_lwt = MetricFamilyMap.empty;
     pre_collect = [];
-    pre_collect_lwt = [];
   }
 
   let default = create ()
 
   let register_pre_collect t f = t.pre_collect <- f :: t.pre_collect
 
-  let register_pre_collect_lwt t f = t.pre_collect_lwt <- f :: t.pre_collect_lwt
-
   let ensure_not_registered t info =
-    if MetricFamilyMap.mem info t.metrics ||
-       MetricFamilyMap.mem info t.metrics_lwt
+    if MetricFamilyMap.mem info t.metrics
     then failwith (Format.asprintf "%a already registered" MetricName.pp info.MetricInfo.name)
 
   let register t info collector =
     ensure_not_registered t info;
     t.metrics <- MetricFamilyMap.add info collector t.metrics
 
-  let register_lwt t info collector =
-    ensure_not_registered t info;
-    t.metrics_lwt <- MetricFamilyMap.add info collector t.metrics_lwt
-
-  open Lwt.Infix
-
-  let map_p m =
-    MetricFamilyMap.fold (fun k f acc -> (k, f ()) :: acc) m []
-    |> Lwt_list.fold_left_s
-      (fun acc (k, v) -> v >|= fun v -> MetricFamilyMap.add k v acc)
-      MetricFamilyMap.empty
-
+  (* Collectors run sequentially. A collector that performs I/O suspends via
+     effects, handled by whatever scheduler is running [collect]. *)
   let collect t =
     List.iter (fun f -> f ()) t.pre_collect;
-    Lwt_list.iter_p (fun f -> f ()) t.pre_collect_lwt >>= fun () ->
-    let metrics = MetricFamilyMap.map (fun f -> f ()) t.metrics in
-    map_p t.metrics_lwt >|= fun metrics_lwt ->
-    MetricFamilyMap.merge
-      (fun _ v1 v2 ->
-         match v1 with
-         | Some v1 -> Some v1
-         | None -> v2)
-      metrics metrics_lwt
-
+    MetricFamilyMap.map (fun f -> f ()) t.metrics
 end
 
 module type METRIC = sig
@@ -251,15 +225,14 @@ module Gauge = struct
 
   let track_inprogress t fn =
     inc_one t;
-    Lwt.finalize fn (fun () -> dec_one t; Lwt.return_unit)
+    Fun.protect fn ~finally:(fun () -> dec_one t)
 
   let time t gettimeofday fn =
     let start = gettimeofday () in
-    Lwt.finalize fn
-      (fun () ->
+    Fun.protect fn
+      ~finally:(fun () ->
          let finish = gettimeofday () in
-         inc t (finish -. start);
-         Lwt.return_unit
+         inc t (finish -. start)
       )
 end
 
@@ -290,11 +263,10 @@ module Summary = struct
 
   let time t gettimeofday fn =
     let start = gettimeofday () in
-    Lwt.finalize fn
-      (fun () ->
+    Fun.protect fn
+      ~finally:(fun () ->
          let finish = gettimeofday () in
-         observe t (finish -. start);
-         Lwt.return_unit
+         observe t (finish -. start)
       )
 end
 
@@ -344,7 +316,7 @@ end
 module type HISTOGRAM = sig
   include METRIC
   val observe : t -> float -> unit
-  val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  val time : t -> (unit -> float) -> (unit -> 'a) -> 'a
 end
 
 let bucket_label = LabelName.v "le"
@@ -394,11 +366,10 @@ module Histogram (Buckets : BUCKETS) = struct
 
   let time t gettimeofday fn =
     let start = gettimeofday () in
-    Lwt.finalize fn
-      (fun () ->
+    Fun.protect fn
+      ~finally:(fun () ->
          let finish = gettimeofday () in
-         observe t (finish -. start);
-         Lwt.return_unit
+         observe t (finish -. start)
       )
 end
 

@@ -44,7 +44,7 @@ end
 
 type config = int option
 
-module Server = Prometheus_app.Cohttp(Cohttp_lwt_unix.Server)
+module Server = Prometheus_lwt.Cohttp(Cohttp_lwt_unix.Server)
 
 let serve = function
   | None -> []

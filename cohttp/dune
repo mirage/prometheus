@@ -1,0 +1,6 @@
+(library
+ (name prometheus_cohttp)
+ (public_name prometheus-cohttp)
+ (libraries prometheus prometheus-app cohttp http fmt)
+ (modules Prometheus_cohttp)
+ (wrapped false))
