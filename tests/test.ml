@@ -6,6 +6,8 @@ open Lwt.Infix
 
 let test_metrics () =
   let registry = CollectorRegistry.create () in
+  let tiny_gauge = Gauge.v ~registry ~help:"Tiny" ~namespace:"dkci" ~subsystem:"tests" "tiny" in
+  Gauge.set tiny_gauge 1e-8;
   let requests =
     let label_names = ["method"; "path"] in
     Counter.v_labels ~label_names ~registry ~help:"Requests" ~namespace:"dkci" ~subsystem:"tests" "requests" in
@@ -22,11 +24,14 @@ let test_metrics () =
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
      # TYPE dkci_tests_requests counter\n\
-     dkci_tests_requests{method=\"GET\", path=\"\\\"\\\\-\\n\"} 5.000000\n\
-     dkci_tests_requests{method=\"POST\", path=\"/login\"} 3.000000\n\
+     dkci_tests_requests{method=\"GET\", path=\"\\\"\\\\-\\n\"} 5\n\
+     dkci_tests_requests{method=\"POST\", path=\"/login\"} 3\n\
+     # HELP dkci_tests_tiny Tiny\n\
+     # TYPE dkci_tests_tiny gauge\n\
+     dkci_tests_tiny 1e-08\n\
      # HELP tests Test \\\\counter:\\n1\n\
      # TYPE tests counter\n\
-     tests 1.000000\n\
+     tests 1\n\
     "
     output
 
@@ -54,10 +59,10 @@ let test_lwt_collectors () =
   Alcotest.(check string) "Text output"
     "# HELP counter_1 The first counter\n\
      # TYPE counter_1 counter\n\
-     counter_1 1.000000\n\
+     counter_1 1\n\
      # HELP counter_2 The second counter\n\
      # TYPE counter_2 counter\n\
-     counter_2 2.000000\n"
+     counter_2 2\n"
     output
 
 module Buckets = struct
@@ -80,16 +85,16 @@ let test_histogram () =
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
      # TYPE dkci_tests_requests histogram\n\
-     dkci_tests_requests_sum{method=\"GET\", path=\"/foo\"} 0.120000\n\
-     dkci_tests_requests_count{method=\"GET\", path=\"/foo\"} 1.000000\n\
-     dkci_tests_requests_bucket{le=\"+Inf\", method=\"GET\", path=\"/foo\"} 1.000000\n\
-     dkci_tests_requests_bucket{le=\"0.500000\", method=\"GET\", path=\"/foo\"} 1.000000\n\
-     dkci_tests_requests_bucket{le=\"0.250000\", method=\"GET\", path=\"/foo\"} 1.000000\n\
-     dkci_tests_requests_sum{method=\"PUT\", path=\"/bar\"} 0.330000\n\
-     dkci_tests_requests_count{method=\"PUT\", path=\"/bar\"} 1.000000\n\
-     dkci_tests_requests_bucket{le=\"+Inf\", method=\"PUT\", path=\"/bar\"} 1.000000\n\
-     dkci_tests_requests_bucket{le=\"0.500000\", method=\"PUT\", path=\"/bar\"} 1.000000\n\
-     dkci_tests_requests_bucket{le=\"0.250000\", method=\"PUT\", path=\"/bar\"} 0.000000\n\
+     dkci_tests_requests_sum{method=\"GET\", path=\"/foo\"} 0.12\n\
+     dkci_tests_requests_count{method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_bucket{le=\"+Inf\", method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.5\", method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.25\", method=\"GET\", path=\"/foo\"} 1\n\
+     dkci_tests_requests_sum{method=\"PUT\", path=\"/bar\"} 0.33000000000000002\n\
+     dkci_tests_requests_count{method=\"PUT\", path=\"/bar\"} 1\n\
+     dkci_tests_requests_bucket{le=\"+Inf\", method=\"PUT\", path=\"/bar\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.5\", method=\"PUT\", path=\"/bar\"} 1\n\
+     dkci_tests_requests_bucket{le=\"0.25\", method=\"PUT\", path=\"/bar\"} 0\n\
     "
     output
 
