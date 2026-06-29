@@ -26,11 +26,8 @@ module TextFormat_0_0_4 = struct
   let output_quoted f s =
     Fmt.string f @@ Re.replace re_quoted_escapes ~f:quote s
 
-  (* Fmt.float by default prints floats using scientific exponential
-   * notation, which loses significant data on e.g. timestamp:
-   *   Fmt.str "%a" Fmt.float 1575363850.57 --> 1.57536e+09 *)
   let float_fmt f =
-    Fmt.pf f "%f"
+    Fmt.pf f "%.17g"
 
   let output_value f v =
     match classify_float v with
