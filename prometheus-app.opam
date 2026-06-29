@@ -37,7 +37,6 @@ depends: [
   "alcotest" {with-test}
   "alcotest-lwt" {with-test}
   "asetmap"
-  "astring"
   "logs" {>= "0.6.0"}
 ]
 build: [
