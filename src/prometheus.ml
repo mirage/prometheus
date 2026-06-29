@@ -1,5 +1,3 @@
-open! Asetmap
-
 module type NAME_SPEC = sig
   val valid : Re.re
 end
@@ -48,7 +46,17 @@ module LabelSet = struct
   type t = string list
   let compare (a:t) (b:t) = compare a b
 end
-module LabelSetMap = Map.Make(LabelSet)
+module LabelSetMap = struct
+  include Map.Make(LabelSet)
+
+  let pp ?(sep=Format.pp_print_cut) pp_item f t =
+    let visit k v first =
+      if not first then sep f ();
+      pp_item f (k, v);
+      false
+    in
+    ignore (fold visit t true : bool)
+end
 
 module MetricInfo = struct
   type t = {
@@ -189,7 +197,7 @@ end = struct
 
   let labels t label_values =
     assert (List.length t.metric.MetricInfo.label_names = List.length label_values);
-    match LabelSetMap.find label_values t.children with
+    match LabelSetMap.find_opt label_values t.children with
     | Some child -> child
     | None ->
       let child = Child.create () in

@@ -45,10 +45,16 @@ module MetricInfo : sig
 end
 (** Metadata about a metric. *)
 
-module LabelSetMap : Asetmap.Map.S with type key = string list
+module LabelSetMap : sig
+  include Map.S with type key = string list
+  val pp :
+    ?sep:(Format.formatter -> unit -> unit) ->
+    (Format.formatter -> string list * 'a -> unit) ->
+    Format.formatter -> 'a t -> unit
+end
 (** A map indexed by a set of labels. *)
 
-module MetricFamilyMap : Asetmap.Map.S with type key = MetricInfo.t
+module MetricFamilyMap : Map.S with type key = MetricInfo.t
 (** A map indexed by metric families. *)
 
 module Sample_set : sig
