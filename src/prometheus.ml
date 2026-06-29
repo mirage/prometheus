@@ -1,4 +1,3 @@
-open! Astring
 open! Asetmap
 
 module type NAME_SPEC = sig

@@ -1,4 +1,3 @@
-open! Astring
 open Prometheus
 open Prometheus_app
 
