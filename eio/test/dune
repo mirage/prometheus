@@ -1,0 +1,4 @@
+(test
+ (name test_eio)
+ (package prometheus-eio)
+ (libraries prometheus prometheus-app prometheus-eio eio eio_main cohttp-eio alcotest))

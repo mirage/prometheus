@@ -1,7 +1,8 @@
 open Prometheus
 open Prometheus_app
 
-open Lwt.Infix
+(* These tests exercise the backend-free core: recording and synchronous
+   collection. No Lwt anywhere. *)
 
 let test_metrics () =
   let registry = CollectorRegistry.create () in
@@ -18,7 +19,7 @@ let test_metrics () =
   Counter.inc post_login 2.;
   let post_login2 = Counter.labels requests ["POST"; "/login"] in
   Counter.inc_one post_login2;
-  CollectorRegistry.collect registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -32,36 +33,6 @@ let test_metrics () =
      # TYPE tests counter\n\
      tests 1\n\
     "
-    output
-
-let test_lwt_collectors () =
-  let registry = CollectorRegistry.create () in
-  let register_counter ~name ~help value =
-    let metric_info = {
-      MetricInfo.name = MetricName.v name;
-      metric_type = Counter;
-      help;
-      label_names = []
-    }
-    in
-    let collector () =
-      Lwt.pause () >|= fun () ->
-      LabelSetMap.singleton [] [Prometheus.Sample_set.sample value]
-    in
-    CollectorRegistry.register_lwt registry metric_info collector
-  in
-  (* Test register_lwt *)
-  register_counter ~name:"counter_1" ~help:"The first counter" 1.0;
-  register_counter ~name:"counter_2" ~help:"The second counter" 2.0;
-  CollectorRegistry.collect registry >|= fun collected ->
-  let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
-  Alcotest.(check string) "Text output"
-    "# HELP counter_1 The first counter\n\
-     # TYPE counter_1 counter\n\
-     counter_1 1\n\
-     # HELP counter_2 The second counter\n\
-     # TYPE counter_2 counter\n\
-     counter_2 2\n"
     output
 
 module Buckets = struct
@@ -79,7 +50,7 @@ let test_histogram () =
   let bar = H.labels requests ["PUT"; "/bar"] in
   H.observe foo 0.12;
   H.observe bar 0.33;
-  CollectorRegistry.collect registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -125,11 +96,11 @@ let check_invalid_label label () =
     failwith (label ^ " should be an invalid label")
 
 let test_valid_labels_set = List.map (fun label ->
-  label, `Quick, fun () -> Lwt.return @@ check_valid_label label ()
+  label, `Quick, check_valid_label label
 ) valid_labels
 
 let test_invalid_labels_set = List.map (fun label ->
-  label, `Quick, fun () -> Lwt.return @@ check_invalid_label label ()
+  label, `Quick, check_invalid_label label
 ) invalid_labels
 
 let check_valid_metric metric () =
@@ -160,21 +131,20 @@ let invalid_metrics = [
 ]
 
 let test_valid_metrics_set = List.map (fun metric ->
-  metric, `Quick, fun () -> Lwt.return @@ check_valid_metric metric ()
+  metric, `Quick, check_valid_metric metric
 ) valid_metrics
 
 let test_invalid_metrics_set = List.map (fun metric ->
-  metric, `Quick, fun () -> Lwt.return @@ check_invalid_metric metric ()
+  metric, `Quick, check_invalid_metric metric
 ) invalid_metrics
 
 let test_set = [
   "Metrics", `Quick, test_metrics;
-  "Lwt collectors",`Quick, test_lwt_collectors;
   "Histogram", `Quick, test_histogram;
 ]
 
 let () =
-  Lwt_main.run @@ Alcotest_lwt.run "prometheus" [
+  Alcotest.run "prometheus" [
     "main", test_set;
     "valid_labels", test_valid_labels_set;
     "invalid_labels", test_invalid_labels_set;
