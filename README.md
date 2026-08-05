@@ -67,6 +67,17 @@ Tick!
 
 Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `Unix` dependency.
 
+### Lwt collectors
+
+The `prometheus-lwt` opam package provides `Prometheus_lwt` with collectors
+that may suspend before producing their samples, and also Lwt versions of the
+timing helpers. 
+
+A future release will remove Lwt from the `prometheus` core. Existing code
+using the core's Lwt-typed functions should migrate to `Prometheus_lwt`, or to
+the synchronous variants such as `Gauge.set_time` now. Code will then keep
+working unchanged when the core switch happens.
+
 ### API docs
 
 Generated API documentation is available at <https://mirage.github.io/prometheus/>.

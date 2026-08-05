@@ -1,3 +1,20 @@
+## dev
+
+- Add a new `prometheus-lwt` metrics package (@avsm @mtelvers @talex5 #66 #60 #65)
+
+  This release is not a breaking change, but instead prepares for
+  deprecation of Lwt in the core package so a future release can remove Lwt
+  from the `prometheus` core. Users of the core's Lwt-typed functions
+  should migrate to `Prometheus_lwt` now. Code using the new interface will
+  keep working unchanged in future releases.
+
+- Add synchronous variants of the timing helpers to the core. Metric recording
+  is synchronous and these will become the only core timing helpers once the
+  Lwt-typed ones move to `prometheus-lwt`.
+
+To migrate existing code, add a dep on `prometheus-lwt` and rename following
+the deprecation warnings from the compiler.
+
 ## v1.3 (2025-12-08)
 
 - Make help / type information be OpenMetrics compatible (@Nymphium @tmcgilchrist #47).  

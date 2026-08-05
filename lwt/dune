@@ -1,0 +1,4 @@
+(library
+ (name prometheus_lwt)
+ (public_name prometheus-lwt)
+ (libraries prometheus lwt))
