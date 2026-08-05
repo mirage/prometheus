@@ -1,7 +1,8 @@
 open Prometheus
 open Prometheus_app
 
-open Lwt.Infix
+(* These tests exercise the backend-free core: recording and synchronous
+   collection. No Lwt anywhere. *)
 
 let clock = ref 0L
 let gettime () = !clock
@@ -25,7 +26,7 @@ let test_metrics () =
   Counter.inc post_login 2.;
   let post_login2 = Counter.labels requests ["POST"; "/login"] in
   Counter.inc_one post_login2;
-  CollectorRegistry.collect_lwt registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -56,7 +57,7 @@ let test_collectors () =
   in
   register_counter ~name:"counter_1" ~help:"The first counter" 1.0;
   register_counter ~name:"counter_2" ~help:"The second counter" 2.0;
-  CollectorRegistry.collect_lwt registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP counter_1 The first counter\n\
@@ -82,7 +83,7 @@ let test_histogram () =
   let bar = H.labels requests ["PUT"; "/bar"] in
   H.observe foo 0.12;
   H.observe bar 0.33;
-  CollectorRegistry.collect_lwt registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -109,7 +110,7 @@ let test_sync_timers () =
   Gauge.track_in_progress gauge (fun () -> ());
   Summary.observe_time summary (fun () -> advance 0.5);
   Summary.observe_time summary (fun () -> advance 1.5);
-  CollectorRegistry.collect_lwt registry >|= fun collected ->
+  let collected = CollectorRegistry.collect registry in
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP gauge_time Time taken\n\
@@ -149,11 +150,11 @@ let check_invalid_label label () =
     failwith (label ^ " should be an invalid label")
 
 let test_valid_labels_set = List.map (fun label ->
-  label, `Quick, fun () -> Lwt.return @@ check_valid_label label ()
+  label, `Quick, check_valid_label label
 ) valid_labels
 
 let test_invalid_labels_set = List.map (fun label ->
-  label, `Quick, fun () -> Lwt.return @@ check_invalid_label label ()
+  label, `Quick, check_invalid_label label
 ) invalid_labels
 
 let check_valid_metric metric () =
@@ -184,11 +185,11 @@ let invalid_metrics = [
 ]
 
 let test_valid_metrics_set = List.map (fun metric ->
-  metric, `Quick, fun () -> Lwt.return @@ check_valid_metric metric ()
+  metric, `Quick, check_valid_metric metric
 ) valid_metrics
 
 let test_invalid_metrics_set = List.map (fun metric ->
-  metric, `Quick, fun () -> Lwt.return @@ check_invalid_metric metric ()
+  metric, `Quick, check_invalid_metric metric
 ) invalid_metrics
 
 let test_set = [
@@ -199,7 +200,7 @@ let test_set = [
 ]
 
 let () =
-  Lwt_main.run @@ Alcotest_lwt.run "prometheus" [
+  Alcotest.run "prometheus" [
     "main", test_set;
     "valid_labels", test_valid_labels_set;
     "invalid_labels", test_invalid_labels_set;

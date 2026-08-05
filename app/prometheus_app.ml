@@ -148,7 +148,7 @@ module Cohttp(Server : Cohttp_lwt.S.Server) = struct
     let uri = Request.uri req in
     match Request.meth req, Uri.path uri with
     | `GET, "/metrics" ->
-      Prometheus.CollectorRegistry.(collect_lwt default) >>= fun data ->
+      Prometheus_lwt.CollectorRegistry.(collect default) >>= fun data ->
       let body = Fmt.to_to_string TextFormat_0_0_4.output data in
       let headers = Header.init_with "Content-Type" "text/plain; version=0.0.4" in
       Server.respond_string ~status:`OK ~headers ~body ()
