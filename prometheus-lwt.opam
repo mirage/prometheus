@@ -1,0 +1,24 @@
+opam-version: "2.0"
+synopsis: "Lwt support for Prometheus monitoring"
+description: "Lwt collectors and timing helpers for Prometheus metrics."
+maintainer: "talex5@gmail.com"
+authors: ["Thomas Leonard" "Anil Madhavapeddy" "David Scott"]
+license: "Apache-2.0"
+homepage: "https://github.com/mirage/prometheus"
+doc: "https://mirage.github.io/prometheus/"
+bug-reports: "https://github.com/mirage/prometheus/issues"
+depends: [
+  "ocaml" {>= "4.11.0"}
+  "dune" {>= "2.3"}
+  "prometheus" {= version}
+  "lwt" {>= "2.5.0"}
+  "prometheus-app" {= version & with-test}
+  "fmt" {>= "0.8.7" & with-test}
+  "alcotest" {with-test}
+  "alcotest-lwt" {with-test}
+]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/prometheus.git"

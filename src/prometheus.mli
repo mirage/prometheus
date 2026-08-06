@@ -9,6 +9,10 @@
 
     - This library is intended to be a dependency of any library that might need to report metrics,
       even though many applications will not enable it. Therefore it should have minimal dependencies.
+
+    - The Lwt-typed functions here are superseded by the [prometheus-lwt]
+      package. A future release will remove Lwt from this library. New code
+      should use [Prometheus_lwt] or the synchronous variants.
 *)
 
 type metric_type =
@@ -96,6 +100,7 @@ module CollectorRegistry : sig
       It will call [collector ()] to collect the values each time [collect] is called. *)
 
   val register_lwt : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t Lwt.t) -> unit
+  [@@deprecated "Use Prometheus_lwt.CollectorRegistry.register instead."]
   (** [register_lwt t metric collector] is the same as [register t metrics collector]
       but [collector] returns [Sample_set.t LabelSetMap.t Lwt.t]. *)
 
@@ -105,7 +110,8 @@ module CollectorRegistry : sig
       information about multiple metrics. *)
 
   val register_pre_collect_lwt : t -> (unit -> unit Lwt.t) -> unit
-  (** [register_pre_collect t fn] same as [register_pre_collect] but [fn] returns [unit Lwt.t]. *)
+  [@@deprecated "Use Prometheus_lwt.CollectorRegistry.register_pre_collect instead."]
+  (** [register_pre_collect_lwt t fn] is like [register_pre_collect] but [fn] returns [unit Lwt.t]. *)
 end
 (** A collection of metric reporters. Usually, only {!CollectorRegistry.default} is used. *)
 
@@ -162,12 +168,21 @@ module Gauge : sig
   (** [set t v] sets the current value of the gauge to [v]. *)
 
   val track_inprogress : t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  [@@deprecated "Use track_in_progress (with two underscores in the name) instead if you don't need Lwt here, \
+                 or Prometheus_lwt.Gauge.track_in_progress if you do."]
   (** [track_inprogress t f] increases the value of the gauge by one while [f ()] is running. *)
 
+  val track_in_progress : t -> (unit -> 'a) -> 'a
+  (** [track_in_progress t f] increases the value of the gauge by one while [f ()] runs. *)
+
   val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  [@@deprecated "This increments the gauge, which is probably not what you want. Use set_time instead."]
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
-      increases the metric by the difference.
-  *)
+      increases the metric by the difference. *)
+
+  val set_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
+  (** [set_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      sets [t] to the difference. *)
 end
 (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
 
@@ -178,7 +193,12 @@ module Summary : sig
   (** [observe t v] increases the total by [v] and the count by one. *)
 
   val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  [@@deprecated "Use observe_time instead if you don't need Lwt here, or Prometheus_lwt.Summary.observe_time if you do."]
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
+
+  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
+  (** [observe_time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 end
 (** A summary is a metric that records both the number of readings and their total.
@@ -211,7 +231,12 @@ module type HISTOGRAM = sig
   (** [observe t v] adds one to the appropriate bucket for v and adds v to the sum. *)
 
   val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  [@@deprecated "Use observe_time instead if you don't need Lwt here, or Prometheus_lwt.HISTOGRAM.observe_time if you do."]
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
+      observes the difference. *)
+
+  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
+  (** [observe_time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 end
 

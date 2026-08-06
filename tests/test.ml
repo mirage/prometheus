@@ -34,7 +34,7 @@ let test_metrics () =
     "
     output
 
-let test_lwt_collectors () =
+let test_collectors () =
   let registry = CollectorRegistry.create () in
   let register_counter ~name ~help value =
     let metric_info = {
@@ -44,13 +44,9 @@ let test_lwt_collectors () =
       label_names = []
     }
     in
-    let collector () =
-      Lwt.pause () >|= fun () ->
-      LabelSetMap.singleton [] [Prometheus.Sample_set.sample value]
-    in
-    CollectorRegistry.register_lwt registry metric_info collector
+    let collector () = LabelSetMap.singleton [] [Prometheus.Sample_set.sample value] in
+    CollectorRegistry.register registry metric_info collector
   in
-  (* Test register_lwt *)
   register_counter ~name:"counter_1" ~help:"The first counter" 1.0;
   register_counter ~name:"counter_2" ~help:"The second counter" 2.0;
   CollectorRegistry.collect registry >|= fun collected ->
@@ -95,6 +91,29 @@ let test_histogram () =
      dkci_tests_requests_bucket{le=\"0.5\", method=\"PUT\", path=\"/bar\"} 1\n\
      dkci_tests_requests_bucket{le=\"0.25\", method=\"PUT\", path=\"/bar\"} 0\n\
     "
+    output
+
+let test_sync_timers () =
+  let registry = CollectorRegistry.create () in
+  let gauge = Gauge.v ~registry ~help:"Time taken" "gauge_time" in
+  let summary = Summary.v ~registry ~help:"Time taken" "summary_time" in
+  let clock = ref 0.0 in
+  let gettime () = !clock in
+  Gauge.set_time gauge gettime (fun () -> clock := !clock +. 1.3);
+  Gauge.set_time gauge gettime (fun () -> clock := !clock +. 1.5);
+  Gauge.track_in_progress gauge (fun () -> ());
+  Summary.observe_time summary gettime (fun () -> clock := !clock +. 0.5);
+  Summary.observe_time summary gettime (fun () -> clock := !clock +. 1.5);
+  CollectorRegistry.collect registry >|= fun collected ->
+  let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
+  Alcotest.(check string) "Text output"
+    "# HELP gauge_time Time taken\n\
+     # TYPE gauge_time gauge\n\
+     gauge_time 1.5\n\
+     # HELP summary_time Time taken\n\
+     # TYPE summary_time summary\n\
+     summary_time_sum 2\n\
+     summary_time_count 2\n"
     output
 
 (* "^[a-zA-Z_][a-zA-Z0-9_]*$" *)
@@ -169,8 +188,9 @@ let test_invalid_metrics_set = List.map (fun metric ->
 
 let test_set = [
   "Metrics", `Quick, test_metrics;
-  "Lwt collectors",`Quick, test_lwt_collectors;
+  "Collectors",`Quick, test_collectors;
   "Histogram", `Quick, test_histogram;
+  "Sync timers", `Quick, test_sync_timers;
 ]
 
 let () =
