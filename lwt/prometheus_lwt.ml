@@ -22,13 +22,13 @@ end
 module Gauge = struct
   let track_in_progress = Prometheus.Gauge.track_inprogress
 
-  let set_time = Prometheus.Gauge.time
+  let set_time ~gettime t fn = Prometheus.Gauge.time t gettime fn
 end
 
 module Summary = struct
-  let observe_time = Prometheus.Summary.time
+  let observe_time ~gettime t fn = Prometheus.Summary.time t gettime fn
 end
 
 module Histogram (H : Prometheus.HISTOGRAM) = struct
-  let observe_time = H.time
+  let observe_time ~gettime t fn = H.time t gettime fn
 end

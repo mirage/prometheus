@@ -180,8 +180,8 @@ module Gauge : sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       increases the metric by the difference. *)
 
-  val set_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
-  (** [set_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+  val set_time : gettime:(unit -> float) -> t -> (unit -> 'a) -> 'a
+  (** [set_time ~gettime t f] calls [gettime ()] before and after executing [f ()] and
       sets [t] to the difference. *)
 end
 (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
@@ -197,8 +197,8 @@ module Summary : sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 
-  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
-  (** [observe_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+  val observe_time : gettime:(unit -> float) -> t -> (unit -> 'a) -> 'a
+  (** [observe_time ~gettime t f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 end
 (** A summary is a metric that records both the number of readings and their total.
@@ -235,8 +235,8 @@ module type HISTOGRAM = sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 
-  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
-  (** [observe_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+  val observe_time : gettime:(unit -> float) -> t -> (unit -> 'a) -> 'a
+  (** [observe_time ~gettime t f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 end
 

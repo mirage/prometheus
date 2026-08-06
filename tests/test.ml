@@ -99,11 +99,11 @@ let test_sync_timers () =
   let summary = Summary.v ~registry ~help:"Time taken" "summary_time" in
   let clock = ref 0.0 in
   let gettime () = !clock in
-  Gauge.set_time gauge gettime (fun () -> clock := !clock +. 1.3);
-  Gauge.set_time gauge gettime (fun () -> clock := !clock +. 1.5);
+  Gauge.set_time gauge ~gettime (fun () -> clock := !clock +. 1.3);
+  Gauge.set_time gauge ~gettime (fun () -> clock := !clock +. 1.5);
   Gauge.track_in_progress gauge (fun () -> ());
-  Summary.observe_time summary gettime (fun () -> clock := !clock +. 0.5);
-  Summary.observe_time summary gettime (fun () -> clock := !clock +. 1.5);
+  Summary.observe_time summary ~gettime (fun () -> clock := !clock +. 0.5);
+  Summary.observe_time summary ~gettime (fun () -> clock := !clock +. 1.5);
   CollectorRegistry.collect registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"

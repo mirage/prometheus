@@ -266,11 +266,11 @@ module Gauge = struct
          Lwt.return_unit
       )
 
-  let set_time t gettimeofday fn =
-    let start = gettimeofday () in
+  let set_time ~gettime t fn =
+    let start = gettime () in
     Fun.protect fn
       ~finally:(fun () ->
-         let finish = gettimeofday () in
+         let finish = gettime () in
          set t (finish -. start)
       )
 end
@@ -309,11 +309,11 @@ module Summary = struct
          Lwt.return_unit
       )
 
-  let observe_time t gettimeofday fn =
-    let start = gettimeofday () in
+  let observe_time ~gettime t fn =
+    let start = gettime () in
     Fun.protect fn
       ~finally:(fun () ->
-         let finish = gettimeofday () in
+         let finish = gettime () in
          observe t (finish -. start)
       )
 end
@@ -365,7 +365,7 @@ module type HISTOGRAM = sig
   include METRIC
   val observe : t -> float -> unit
   val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t [@@deprecated]
-  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
+  val observe_time : gettime:(unit -> float) -> t -> (unit -> 'a) -> 'a
 end
 
 let bucket_label = LabelName.v "le"
@@ -422,11 +422,11 @@ module Histogram (Buckets : BUCKETS) = struct
          Lwt.return_unit
       )
 
-  let observe_time t gettimeofday fn =
-    let start = gettimeofday () in
+  let observe_time ~gettime t fn =
+    let start = gettime () in
     Fun.protect fn
       ~finally:(fun () ->
-         let finish = gettimeofday () in
+         let finish = gettime () in
          observe t (finish -. start)
       )
 end

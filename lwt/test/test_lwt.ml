@@ -46,7 +46,7 @@ let test_timers () =
   let gauge = Gauge.v ~registry:core ~help:"Time taken" "gauge_time" in
   let clock = ref 0.0 in
   let gettime () = !clock in
-  Prometheus_lwt.Gauge.set_time gauge gettime
+  Prometheus_lwt.Gauge.set_time gauge ~gettime
     (fun () -> clock := !clock +. 1.5; Lwt.pause ())
   >>= fun () ->
   Prometheus_lwt.CollectorRegistry.collect registry >|= fun collected ->
