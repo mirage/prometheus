@@ -33,17 +33,17 @@ module Gauge : sig
   val track_in_progress : Prometheus.Gauge.t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
   (** [track_in_progress t f] increases [t] by one while [f ()] is running. *)
 
-  val set_time : Prometheus.Gauge.t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [set_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+  val set_time : Prometheus.Gauge.t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [set_time t f] records the time (in seconds) before and after executing [f ()] and
       sets [t] to the difference. *)
 end
 
 module Summary : sig
-  val observe_time : Prometheus.Summary.t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [observe_time t gettime f] observes the duration of [f ()]. *)
+  val observe_time : Prometheus.Summary.t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [observe_time t f] observes the duration of [f ()]. *)
 end
 
 module Histogram (H : Prometheus.HISTOGRAM) : sig
-  val observe_time : H.t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t
-  (** [observe_time t gettime f] observes the duration of [f ()]. *)
+  val observe_time : H.t -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  (** [observe_time t f] observes the duration of [f ()]. *)
 end

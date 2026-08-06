@@ -3,6 +3,10 @@ open Prometheus_app
 
 open Lwt.Infix
 
+let clock = ref 0.0
+let gettime () = !clock
+let () = Prometheus.init ~gettime ()
+
 let test_metrics () =
   let registry = CollectorRegistry.create () in
   let tiny_gauge = Gauge.v ~registry ~help:"Tiny" ~namespace:"dkci" ~subsystem:"tests" "tiny" in
@@ -18,7 +22,7 @@ let test_metrics () =
   Counter.inc post_login 2.;
   let post_login2 = Counter.labels requests ["POST"; "/login"] in
   Counter.inc_one post_login2;
-  CollectorRegistry.collect registry >|= fun collected ->
+  CollectorRegistry.collect_lwt registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -49,7 +53,7 @@ let test_collectors () =
   in
   register_counter ~name:"counter_1" ~help:"The first counter" 1.0;
   register_counter ~name:"counter_2" ~help:"The second counter" 2.0;
-  CollectorRegistry.collect registry >|= fun collected ->
+  CollectorRegistry.collect_lwt registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP counter_1 The first counter\n\
@@ -75,7 +79,7 @@ let test_histogram () =
   let bar = H.labels requests ["PUT"; "/bar"] in
   H.observe foo 0.12;
   H.observe bar 0.33;
-  CollectorRegistry.collect registry >|= fun collected ->
+  CollectorRegistry.collect_lwt registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP dkci_tests_requests Requests\n\
@@ -97,14 +101,12 @@ let test_sync_timers () =
   let registry = CollectorRegistry.create () in
   let gauge = Gauge.v ~registry ~help:"Time taken" "gauge_time" in
   let summary = Summary.v ~registry ~help:"Time taken" "summary_time" in
-  let clock = ref 0.0 in
-  let gettime () = !clock in
-  Gauge.set_time gauge gettime (fun () -> clock := !clock +. 1.3);
-  Gauge.set_time gauge gettime (fun () -> clock := !clock +. 1.5);
+  Gauge.set_time gauge (fun () -> clock := !clock +. 1.3);
+  Gauge.set_time gauge (fun () -> clock := !clock +. 1.5);
   Gauge.track_in_progress gauge (fun () -> ());
-  Summary.observe_time summary gettime (fun () -> clock := !clock +. 0.5);
-  Summary.observe_time summary gettime (fun () -> clock := !clock +. 1.5);
-  CollectorRegistry.collect registry >|= fun collected ->
+  Summary.observe_time summary (fun () -> clock := !clock +. 0.5);
+  Summary.observe_time summary (fun () -> clock := !clock +. 1.5);
+  CollectorRegistry.collect_lwt registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"
     "# HELP gauge_time Time taken\n\

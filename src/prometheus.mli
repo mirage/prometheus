@@ -15,6 +15,19 @@
       should use [Prometheus_lwt] or the synchronous variants.
 *)
 
+val init : gettime:(unit -> float) -> unit -> unit
+(** [init ~gettime ()] sets the global function for recording the current time.
+
+    {!Prometheus_unix} calls [init ~gettime:Unix.gettimeofday ()] at start-up,
+    but if you're collecting metrics manually then you MUST call [init]
+    yourself before using any time-based functions.
+
+    Only the main application code that collects metrics should call this;
+    libraries that merely report metrics should not call this function.
+    It is safe for a library to use a time-based function in an application
+    that never collects metrics (the metrics will be wrong, but it doesn't
+    matter because they're never read). *)
+
 type metric_type =
   | Counter
   | Gauge
@@ -93,7 +106,12 @@ module CollectorRegistry : sig
   (** The default registry. *)
 
   val collect : t -> snapshot Lwt.t
-  (** Read the current value of each metric. *)
+  [@@deprecated "Use collect_lwt instead, and remember to call Prometheus.init!"]
+
+  val collect_lwt : t -> snapshot Lwt.t
+  (** Read the current value of each metric.
+
+      @raise Invalid_arg if {!init} has not been called *)
 
   val register : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
@@ -180,8 +198,8 @@ module Gauge : sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       increases the metric by the difference. *)
 
-  val set_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
-  (** [set_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+  val set_time : t -> (unit -> 'a) -> 'a
+  (** [set_time t f] records the time (in seconds) before and after executing [f ()] and
       sets [t] to the difference. *)
 end
 (** A gauge is a metric that represents a single numerical value that can arbitrarily go up and down. *)
@@ -197,8 +215,8 @@ module Summary : sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 
-  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
-  (** [observe_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+  val observe_time : t -> (unit -> 'a) -> 'a
+  (** [observe_time t f] records the time (in seconds) before and after executing [f ()] and
       observes the difference. *)
 end
 (** A summary is a metric that records both the number of readings and their total.
@@ -235,8 +253,8 @@ module type HISTOGRAM = sig
   (** [time t gettime f] calls [gettime ()] before and after executing [f ()] and
       observes the difference. *)
 
-  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
-  (** [observe_time t gettime f] calls [gettime ()] before and after executing [f ()] and
+  val observe_time : t -> (unit -> 'a) -> 'a
+  (** [observe_time t f] records the time (in seconds) before and after executing [f ()] and
       observes the difference. *)
 end
 
@@ -244,3 +262,8 @@ module Histogram (Buckets : sig val spec : Histogram_spec.t end) : HISTOGRAM
 
 module DefaultHistogram : HISTOGRAM
 (** A histogram configured with reasonable defaults for measuring network request times in seconds. *)
+
+val get_gettime : unit -> (unit -> float)
+(** Get the time function passed to {!init}.
+
+    If [init] has not been called yet, the returned function always returns 0.0. *)

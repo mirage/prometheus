@@ -1,3 +1,11 @@
+let dummy_gettime = Fun.const 0.0
+let gettime = ref dummy_gettime
+
+let init ~gettime:x () =
+  gettime := x
+
+let get_gettime () = !gettime
+
 module type NAME_SPEC = sig
   val valid : Re.re
 end
@@ -140,7 +148,9 @@ module CollectorRegistry = struct
       (fun acc (k, v) -> v >|= fun v -> MetricFamilyMap.add k v acc)
       MetricFamilyMap.empty
 
-  let collect t =
+  let collect_lwt t =
+    if !gettime == dummy_gettime then
+      invalid_arg "CollectorRegistry.collect called, but Prometheus.init hasn't been called";
     List.iter (fun f -> f ()) t.pre_collect;
     Lwt_list.iter_p (fun f -> f ()) t.pre_collect_lwt >>= fun () ->
     let metrics = MetricFamilyMap.map (fun f -> f ()) t.metrics in
@@ -152,6 +162,7 @@ module CollectorRegistry = struct
          | None -> v2)
       metrics metrics_lwt
 
+  let collect = collect_lwt
 end
 
 module type METRIC = sig
@@ -266,11 +277,12 @@ module Gauge = struct
          Lwt.return_unit
       )
 
-  let set_time t gettimeofday fn =
-    let start = gettimeofday () in
+  let set_time t fn =
+    let gettime = !gettime in
+    let start = gettime () in
     Fun.protect fn
       ~finally:(fun () ->
-         let finish = gettimeofday () in
+         let finish = gettime () in
          set t (finish -. start)
       )
 end
@@ -309,11 +321,12 @@ module Summary = struct
          Lwt.return_unit
       )
 
-  let observe_time t gettimeofday fn =
-    let start = gettimeofday () in
+  let observe_time t fn =
+    let gettime = !gettime in
+    let start = gettime () in
     Fun.protect fn
       ~finally:(fun () ->
-         let finish = gettimeofday () in
+         let finish = gettime () in
          observe t (finish -. start)
       )
 end
@@ -365,7 +378,7 @@ module type HISTOGRAM = sig
   include METRIC
   val observe : t -> float -> unit
   val time : t -> (unit -> float) -> (unit -> 'a Lwt.t) -> 'a Lwt.t [@@deprecated]
-  val observe_time : t -> (unit -> float) -> (unit -> 'a) -> 'a
+  val observe_time : t -> (unit -> 'a) -> 'a
 end
 
 let bucket_label = LabelName.v "le"
@@ -422,11 +435,12 @@ module Histogram (Buckets : BUCKETS) = struct
          Lwt.return_unit
       )
 
-  let observe_time t gettimeofday fn =
-    let start = gettimeofday () in
+  let observe_time t fn =
+    let gettime = !gettime in
+    let start = gettime () in
     Fun.protect fn
       ~finally:(fun () ->
-         let finish = gettimeofday () in
+         let finish = gettime () in
          observe t (finish -. start)
       )
 end
