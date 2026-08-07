@@ -1,6 +1,8 @@
-## dev
+## v1.4 (2026-08-07)
 
-- Add a new `prometheus-lwt` metrics package (@avsm @mtelvers @talex5 #66 #60 #65)
+Core/Lwt split:
+
+- Add a new `prometheus-lwt` metrics package (@avsm @mtelvers @talex5 #66, reviewed by @dinosaure)
 
   This release is not a breaking change, but instead prepares for
   deprecation of Lwt in the core package so a future release can remove Lwt
@@ -12,8 +14,27 @@
   is synchronous and these will become the only core timing helpers once the
   Lwt-typed ones move to `prometheus-lwt`.
 
+- The replacement time-based functions no longer take a `gettime` argument.
+  Instead, this is provided once by the new `Prometheus.init` function,
+  which is called automatically when using `Prometheus_unix`.
+
 To migrate existing code, add a dep on `prometheus-lwt` and rename following
-the deprecation warnings from the compiler.
+the deprecation warnings from the compiler. If you collect metrics but aren't
+using `Prometheus_unix` then add a call to `Prometheus.init`.
+
+Bug fixes:
+
+- Format floats with `%.17g` (@samoht @talex5 #62).  
+  The text exposition formatter printed metric values with `%f`,
+  so any magnitude below ~5e-7 was reported as 0.000000.
+
+Other changes:
+
+- Remove `Astring` dependency (@talex5 #63).
+
+- Remove `Asetmap` dependency (@talex5 #64).  
+  This changes the types of `LabelSetMap` and `MetricFamilyMap` slightly,
+  which might affect custom reporters.
 
 ## v1.3 (2025-12-08)
 
