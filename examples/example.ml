@@ -15,10 +15,14 @@ module Metrics = struct
   let ticks_counted_total =
     let help = "Total number of ticks counted" in
     Counter.v ~help ~namespace ~subsystem "ticks_counted_total"
+
+  let sleep_time =
+    let help = "Time spent sleeping" in
+    Summary.v ~help ~namespace ~subsystem "sleep_time_seconds"
 end
 
 let rec counter () =
-  Lwt_unix.sleep 1.0 >>= fun () ->
+  Prometheus_lwt.Summary.observe_time Metrics.sleep_time (fun () -> Lwt_unix.sleep 1.0) >>= fun () ->
   print_endline "Tick!";
   Prometheus.Counter.inc_one Metrics.ticks_counted_total;
   counter ()
