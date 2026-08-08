@@ -1,5 +1,8 @@
 [@@@alert "-deprecated"]
 
+let time_delta t0 t1 =
+  Int64.to_float (Int64.sub t1 t0) /. 1e9
+
 (* This transition module reexports the core operations under their
    new names to allow the core package to drop the Lwt dependency
    in a future release. This interface will not change. *)
@@ -22,13 +25,37 @@ end
 module Gauge = struct
   let track_in_progress = Prometheus.Gauge.track_inprogress
 
-  let set_time t fn = Prometheus.Gauge.time t (Prometheus.get_gettime ()) fn
+  let set_time t fn =
+    let gettime = Prometheus.get_gettime () in
+    let start = gettime () in
+    Lwt.finalize fn
+      (fun () ->
+         let finish = gettime () in
+         Prometheus.Gauge.set t (time_delta start finish);
+         Lwt.return_unit
+      )
 end
 
 module Summary = struct
-  let observe_time t fn = Prometheus.Summary.time t (Prometheus.get_gettime ()) fn
+  let observe_time t fn =
+    let gettime = Prometheus.get_gettime () in
+    let start = gettime () in
+    Lwt.finalize fn
+      (fun () ->
+         let finish = gettime () in
+         Prometheus.Summary.observe t (time_delta start finish);
+         Lwt.return_unit
+      )
 end
 
 module Histogram (H : Prometheus.HISTOGRAM) = struct
-  let observe_time t fn = H.time t (Prometheus.get_gettime ()) fn
+  let observe_time t fn =
+    let gettime = Prometheus.get_gettime () in
+    let start = gettime () in
+    Lwt.finalize fn
+      (fun () ->
+         let finish = gettime () in
+         H.observe t (time_delta start finish);
+         Lwt.return_unit
+      )
 end

@@ -1,10 +1,13 @@
-let dummy_gettime = Fun.const 0.0
+let dummy_gettime = Fun.const 0L
 let gettime = ref dummy_gettime
 
 let init ~gettime:x () =
   gettime := x
 
 let get_gettime () = !gettime
+
+let time_delta t0 t1 =
+  Int64.to_float (Int64.sub t1 t0) /. 1e9
 
 module type NAME_SPEC = sig
   val valid : Re.re
@@ -283,7 +286,7 @@ module Gauge = struct
     Fun.protect fn
       ~finally:(fun () ->
          let finish = gettime () in
-         set t (finish -. start)
+         set t (time_delta start finish)
       )
 end
 
@@ -327,7 +330,7 @@ module Summary = struct
     Fun.protect fn
       ~finally:(fun () ->
          let finish = gettime () in
-         observe t (finish -. start)
+         observe t (time_delta start finish)
       )
 end
 
@@ -441,7 +444,7 @@ module Histogram (Buckets : BUCKETS) = struct
     Fun.protect fn
       ~finally:(fun () ->
          let finish = gettime () in
-         observe t (finish -. start)
+         observe t (time_delta start finish)
       )
 end
 
