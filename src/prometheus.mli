@@ -18,7 +18,7 @@
 val init : gettime:(unit -> int64) -> unit -> unit
 (** [init ~gettime ()] sets the global function for recording the current time
     (in nanosecods from an arbitrary base).
-    Typically this will be [Mtime_clock.elapsed_ns].
+    Typically this will be [Mirage_mtime.elapsed_ns].
 
     {!Prometheus_app} calls this at start-up, but if you're collecting metrics
     manually then you MUST call [init] yourself before using any time-based

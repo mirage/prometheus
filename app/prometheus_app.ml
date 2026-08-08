@@ -156,7 +156,7 @@ module Cohttp(Server : Cohttp_lwt.S.Server) = struct
 end
 
 let () =
-  Prometheus.init ~gettime:Mtime_clock.elapsed_ns ();
+  Prometheus.init ~gettime:Mirage_mtime.elapsed_ns ();
   CollectorRegistry.(register_pre_collect default) Runtime.update;
   let add (info, collector) =
     CollectorRegistry.(register default) info collector in
