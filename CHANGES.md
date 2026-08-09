@@ -1,8 +1,9 @@
-## v1.4 (2026-08-07)
+## v1.4 (2026-08-09)
 
 Core/Lwt split:
 
-- Add a new `prometheus-lwt` metrics package (@avsm @mtelvers @talex5 #66, reviewed by @dinosaure)
+- Add a new `prometheus-lwt` metrics package.
+  (@avsm @mtelvers @talex5 #66 #67 #68 #69, reviewed by @dinosaure)
 
   This release is not a breaking change, but instead prepares for
   deprecation of Lwt in the core package so a future release can remove Lwt
@@ -19,8 +20,7 @@ Core/Lwt split:
   which is called automatically when using `Prometheus_unix`.
 
 To migrate existing code, add a dep on `prometheus-lwt` and rename following
-the deprecation warnings from the compiler. If you collect metrics but aren't
-using `Prometheus_unix` then add a call to `Prometheus.init`.
+the deprecation warnings from the compiler.
 
 Bug fixes:
 
