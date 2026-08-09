@@ -3,9 +3,12 @@ open Prometheus_app
 
 open Lwt.Infix
 
-let clock = ref 0.0
+let clock = ref 0L
 let gettime () = !clock
 let () = Prometheus.init ~gettime ()
+
+let advance sec =
+  clock := Int64.add !clock (Int64.of_float (sec *. 1e9))
 
 let test_metrics () =
   let registry = CollectorRegistry.create () in
@@ -101,11 +104,11 @@ let test_sync_timers () =
   let registry = CollectorRegistry.create () in
   let gauge = Gauge.v ~registry ~help:"Time taken" "gauge_time" in
   let summary = Summary.v ~registry ~help:"Time taken" "summary_time" in
-  Gauge.set_time gauge (fun () -> clock := !clock +. 1.3);
-  Gauge.set_time gauge (fun () -> clock := !clock +. 1.5);
+  Gauge.set_time gauge (fun () -> advance 1.3);
+  Gauge.set_time gauge (fun () -> advance 1.5);
   Gauge.track_in_progress gauge (fun () -> ());
-  Summary.observe_time summary (fun () -> clock := !clock +. 0.5);
-  Summary.observe_time summary (fun () -> clock := !clock +. 1.5);
+  Summary.observe_time summary (fun () -> advance 0.5);
+  Summary.observe_time summary (fun () -> advance 1.5);
   CollectorRegistry.collect_lwt registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in
   Alcotest.(check string) "Text output"

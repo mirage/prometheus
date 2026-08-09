@@ -3,9 +3,12 @@ open Prometheus_app
 
 open Lwt.Infix
 
-let clock = ref 0.0
+let clock = ref 0L
 let gettime () = !clock
 let () = Prometheus.init ~gettime ()
+
+let advance sec =
+  clock := Int64.add !clock (Int64.of_float (sec *. 1e9))
 
 let test_lwt_collectors () =
   let registry = Prometheus_lwt.CollectorRegistry.of_registry (CollectorRegistry.create ()) in
@@ -49,7 +52,7 @@ let test_timers () =
   let core = Prometheus_lwt.CollectorRegistry.core registry in
   let gauge = Gauge.v ~registry:core ~help:"Time taken" "gauge_time" in
   Prometheus_lwt.Gauge.set_time gauge
-    (fun () -> clock := !clock +. 1.5; Lwt.pause ())
+    (fun () -> advance 1.5; Lwt.pause ())
   >>= fun () ->
   Prometheus_lwt.CollectorRegistry.collect registry >|= fun collected ->
   let output = Fmt.to_to_string TextFormat_0_0_4.output collected in

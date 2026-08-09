@@ -66,7 +66,6 @@ let listen_prometheus =
 let opts = listen_prometheus
 
 let () =
-  Prometheus.init ~gettime:Unix.gettimeofday ();
   let add (info, collector) =
     CollectorRegistry.(register default) info collector in
   List.iter add Unix_runtime.metrics

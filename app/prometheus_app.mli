@@ -11,7 +11,8 @@
       GC statistics, as recommended by Prometheus.
 
     - This module does not depend on [Unix], and so can be used in unikernels.
-      For that case, you must remember to call {!Prometheus.init} yourself at start-up. *)
+    
+    - This module calls {!Prometheus.init} automatically when linked. *)
 
 module TextFormat_0_0_4 : sig
   val output : Prometheus.CollectorRegistry.snapshot Fmt.t

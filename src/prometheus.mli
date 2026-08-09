@@ -15,12 +15,14 @@
       should use [Prometheus_lwt] or the synchronous variants.
 *)
 
-val init : gettime:(unit -> float) -> unit -> unit
-(** [init ~gettime ()] sets the global function for recording the current time.
+val init : gettime:(unit -> int64) -> unit -> unit
+(** [init ~gettime ()] sets the global function for recording the current time
+    (in nanosecods from an arbitrary base).
+    Typically this will be [Mirage_mtime.elapsed_ns].
 
-    {!Prometheus_unix} calls [init ~gettime:Unix.gettimeofday ()] at start-up,
-    but if you're collecting metrics manually then you MUST call [init]
-    yourself before using any time-based functions.
+    {!Prometheus_app} calls this at start-up, but if you're collecting metrics
+    manually then you MUST call [init] yourself before using any time-based
+    functions.
 
     Only the main application code that collects metrics should call this;
     libraries that merely report metrics should not call this function.
@@ -263,7 +265,7 @@ module Histogram (Buckets : sig val spec : Histogram_spec.t end) : HISTOGRAM
 module DefaultHistogram : HISTOGRAM
 (** A histogram configured with reasonable defaults for measuring network request times in seconds. *)
 
-val get_gettime : unit -> (unit -> float)
+val get_gettime : unit -> (unit -> int64)
 (** Get the time function passed to {!init}.
 
-    If [init] has not been called yet, the returned function always returns 0.0. *)
+    If [init] has not been called yet, the returned function always returns 0. *)
