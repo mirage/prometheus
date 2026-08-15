@@ -1,0 +1,28 @@
+opam-version: "2.0"
+synopsis: "Eio support for Prometheus monitoring"
+description: """\
+Serve Prometheus metrics from an Eio application via a cohttp-eio
+handler for `/metrics`. """
+maintainer: "talex5@gmail.com"
+authors: ["Anil Madhavapeddy" "Mark Elvers" "Thomas Leonard" "David Scott"]
+license: "Apache-2.0"
+homepage: "https://github.com/mirage/prometheus"
+doc: "https://mirage.github.io/prometheus/"
+bug-reports: "https://github.com/mirage/prometheus/issues"
+depends: [
+  "ocaml" {>= "5.0"}
+  "dune" {>= "2.3"}
+  "prometheus" {= version}
+  "prometheus-reporter" {= version}
+  "fmt" {>= "0.8.7"}
+  "eio" {>= "1.0"}
+  "cohttp-eio" {>= "6.0.0"}
+  "http" {>= "6.0.0"}
+  "eio_main" {with-test}
+  "alcotest" {with-test}
+]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/prometheus.git"

@@ -1,0 +1,4 @@
+(library
+ (name prometheus_eio)
+ (public_name prometheus-eio)
+ (libraries prometheus prometheus-reporter eio cohttp-eio http fmt))

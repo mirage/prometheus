@@ -1,5 +1,11 @@
 ## v2.0-dev
 
+- Add a new `prometheus-eio` serving package (@mtelvers @avsm #60)
+
+  `Prometheus_eio.callback` is a cohttp-eio handler that serves the
+  default registry at `/metrics`. It depends only on `prometheus-reporter`,
+  so no Lwt or cohttp-lwt code is linked into an Eio application.
+
 - Add a new `prometheus-reporter` package with the cohttp-free parts of
   `prometheus-app` (@ulrikstrid @avsm #39 #46)
 

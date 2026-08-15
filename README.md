@@ -85,6 +85,19 @@ and record metrics do not pull in a concurrency library. Code that used the
 core's Lwt-typed functions should use `Prometheus_lwt`, or the synchronous
 variants such as `Gauge.set_time`.
 
+### Eio collectors
+
+An Eio application uses the `prometheus-eio` opam package.
+`Prometheus_eio.callback` is a cohttp-eio handler for `/metrics`:
+
+```ocaml
+Eio_main.run @@ fun env ->
+Eio.Switch.run @@ fun sw ->
+let addr = `Tcp (Eio.Net.Ipaddr.V4.loopback, 9090) in
+let socket = Eio.Net.listen ~sw (Eio.Stdenv.net env) ~backlog:5 addr in
+let server = Cohttp_eio.Server.make ~callback:Prometheus_eio.callback () in
+Cohttp_eio.Server.run socket server ~on_error:(fun _ -> ())
+```
 
 ### API docs
 
