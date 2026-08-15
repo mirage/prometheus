@@ -67,6 +67,13 @@ Tick!
 
 Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `Unix` dependency.
 
+The `prometheus-reporter` opam package provides the parts of `prometheus-app`
+that do not depend on cohttp. `Prometheus_reporter` renders a registry
+snapshot in the Prometheus text format and registers the GC collectors, so
+applications can serve metrics with any web server such as Dream or Piaf.
+`Prometheus_reporter_unix` adds the process start-time metric and a Logs
+reporter that counts logged messages.
+
 ### Lwt collectors
 
 The `prometheus-lwt` opam package provides `Prometheus_lwt` with collectors

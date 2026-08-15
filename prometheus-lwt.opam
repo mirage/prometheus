@@ -12,6 +12,10 @@ depends: [
   "dune" {>= "2.3"}
   "prometheus" {= version}
   "lwt" {>= "2.5.0"}
+  "prometheus-reporter" {= version & with-test}
+  "fmt" {with-test}
+  "alcotest" {with-test}
+  "alcotest-lwt" {with-test}
 ]
 build: [
   ["dune" "build" "-p" name "-j" jobs]

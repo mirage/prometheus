@@ -1,5 +1,5 @@
 open Prometheus
-open Prometheus_app
+open Prometheus_reporter
 
 open Lwt.Infix
 

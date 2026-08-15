@@ -1,0 +1,13 @@
+(library
+ (name prometheus_reporter)
+ (public_name prometheus-reporter)
+ (libraries prometheus fmt re mirage-mtime)
+ (modules Prometheus_reporter)
+ (wrapped false))
+
+(library
+ (name prometheus_reporter_unix)
+ (public_name prometheus-reporter.unix)
+ (libraries prometheus prometheus-reporter fmt fmt.tty logs logs.fmt unix)
+ (modules Prometheus_reporter_unix)
+ (wrapped false))

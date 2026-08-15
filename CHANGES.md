@@ -1,5 +1,14 @@
 ## v2.0-dev
 
+- Add a new `prometheus-reporter` package with the cohttp-free parts of
+  `prometheus-app` (@ulrikstrid @avsm #39 #46)
+
+  `Prometheus_reporter` renders the text format and registers the GC
+  collectors. `Prometheus_reporter_unix` adds the process start-time metric
+  and the Logs reporter. `prometheus-app` reexports both so existing code
+  keeps working. Applications can now serve the rendered metrics with
+  any web server of choice.
+
 - Remove Lwt from the `prometheus` core (@mtelvers @avsm #60 #65)
 
   The deprecated Lwt functions are removed from the core package, and
