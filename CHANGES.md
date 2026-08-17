@@ -1,3 +1,15 @@
+## v2.0-dev
+
+- Remove Lwt from the `prometheus` core (@mtelvers @avsm #60 #65)
+
+  The deprecated Lwt functions are removed from the core package, and
+  `CollectorRegistry.collect` now returns a snapshot directly.
+  Lwt collectors are all in `prometheus-lwt`, whose interface is unchanged
+  from the v1.4 release.
+
+  Applications that collected via the core in an Lwt context should use
+  `Prometheus_lwt.CollectorRegistry.collect`.
+
 ## v1.4 (2026-08-09)
 
 Core/Lwt split:

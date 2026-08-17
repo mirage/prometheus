@@ -71,12 +71,13 @@ Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `U
 
 The `prometheus-lwt` opam package provides `Prometheus_lwt` with collectors
 that may suspend before producing their samples, and also Lwt versions of the
-timing helpers. 
+timing helpers.
 
-A future release will remove Lwt from the `prometheus` core. Existing code
-using the core's Lwt-typed functions should migrate to `Prometheus_lwt`, or to
-the synchronous variants such as `Gauge.set_time` now. Code will then keep
-working unchanged when the core switch happens.
+The `prometheus` core does not depend on Lwt, so libraries that only define
+and record metrics do not pull in a concurrency library. Code that used the
+core's Lwt-typed functions should use `Prometheus_lwt`, or the synchronous
+variants such as `Gauge.set_time`.
+
 
 ### API docs
 
