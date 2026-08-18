@@ -109,7 +109,7 @@ module CollectorRegistry : sig
   val collect : t -> snapshot
   (** Read the current value of each metric.
 
-      @raise Invalid_arg if {!init} has not been called *)
+      @raise Invalid_argument if {!init} has not been called *)
 
   val register : t -> MetricInfo.t -> (unit -> Sample_set.t LabelSetMap.t) -> unit
   (** [register t metric collector] adds [metric] to the set of metrics being collected.

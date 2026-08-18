@@ -36,9 +36,9 @@ module Logging : sig
             "cohttp.lwt.io", Logs.Info;
           ]
       ]}
-      @param default_level The default log-level to use (default [Logs.Info]).
+      @param default_level The default log-level to use (default {!Logs.Info}).
       @param levels Provides levels for specific log sources.
-      @param formatter A custom formatter (default [Fmt.stderr]). *)
+      @param formatter A custom formatter (default {!Fmt.stderr}). *)
 
   val inc_counter : Logs.level -> string -> unit
   (** [inc_counter level src] increments the count of messages logged by [src] at [level].
