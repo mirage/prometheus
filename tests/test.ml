@@ -1,5 +1,5 @@
 open Prometheus
-open Prometheus_app
+open Prometheus_reporter
 
 (* These tests exercise the backend-free core: recording and synchronous
    collection. No Lwt anywhere. *)

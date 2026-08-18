@@ -1,13 +1,13 @@
 (library
  (name prometheus_app)
  (public_name prometheus-app)
- (libraries prometheus prometheus-lwt lwt cohttp-lwt fmt re mirage-mtime)
+ (libraries prometheus prometheus-lwt prometheus-reporter lwt cohttp-lwt fmt)
  (modules Prometheus_app)
  (wrapped false))
 
 (library
  (name prometheus_app_unix)
  (public_name prometheus-app.unix)
- (libraries prometheus prometheus-app cmdliner cohttp-lwt cohttp-lwt-unix logs.fmt fmt.tty)
+ (libraries prometheus prometheus-app prometheus-reporter.unix cmdliner cohttp-lwt cohttp-lwt-unix)
  (modules Prometheus_unix)
  (wrapped false))
