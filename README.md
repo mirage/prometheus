@@ -96,7 +96,8 @@ Eio.Switch.run @@ fun sw ->
 let addr = `Tcp (Eio.Net.Ipaddr.V4.loopback, 9090) in
 let socket = Eio.Net.listen ~sw (Eio.Stdenv.net env) ~backlog:5 addr in
 let server = Cohttp_eio.Server.make ~callback:Prometheus_eio.callback () in
-Cohttp_eio.Server.run socket server ~on_error:(fun _ -> ())
+let log_warning ex = Logs.warn (fun f -> f "%a" Eio.Exn.pp ex) in
+Cohttp_eio.Server.run socket server ~on_error:log_warning
 ```
 
 ### API docs
