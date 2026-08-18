@@ -17,13 +17,28 @@
 module Logging = Prometheus_reporter_unix.Logging
 (** Report metrics for messages logged. See {!Prometheus_reporter_unix.Logging}. *)
 
-type config
+type config =
+  [ `TCP of [ `Host of string ] * [ `Port of int ]
+  | `Unix_domain_socket of [ `File of string ] ] option
+(** The address to serve metrics on, if any. [`Host] is a hostname, an IPv4
+    address or an IPv6 address without brackets. *)
+
+val of_string : string -> (config, [`Msg of string]) result
+(** [of_string s] parses a listen address such as ["9090"],
+    ["tcp:127.0.0.1:9090"], ["tcp:[::1]:9090"], ["tcp:localhost"] or
+    ["unix:/run/metrics.sock"]. *)
+
+val pp : Format.formatter -> config -> unit
+(** [pp] formats a config in the syntax accepted by {!of_string}. *)
 
 val serve : config -> unit Lwt.t list
 (** [serve config] starts a Cohttp server according to config.
     It returns a singleton list containing the thread to monitor,
-    or an empty list if no server is configured. *)
+    or an empty list if no server is configured. The socket is bound before
+    the thread is returned.
+    @raise Failure if the address cannot be resolved.
+    @raise Unix.Unix_error if the socket cannot be bound. *)
 
 val opts : config Cmdliner.Term.t
 (** [opts] is the extra command-line options to offer Prometheus
-    monitoring. *)
+    monitoring. It rejects addresses that {!of_string} cannot parse. *)

@@ -17,6 +17,10 @@ Tick!
 ...
 ```
 
+`--listen-prometheus` takes a bare port number or an address such as
+`tcp:127.0.0.1:9090`, `tcp:[::1]:9090`, `tcp:localhost` or 
+`unix:/run/metrics.sock`. The port defaults to 9090.
+
 Unikernels can use `prometheus-reporter` instead to avoid the `Unix` and cohttp dependencies."""
 maintainer: "talex5@gmail.com"
 authors: ["Thomas Leonard" "David Scott"]
@@ -35,6 +39,8 @@ depends: [
   "cohttp-lwt-unix" {>= "4.0.0"}
   "lwt" {>= "2.5.0"}
   "cmdliner"
+  "uri" {>= "2.0.0"}
+  "alcotest" {with-test}
 ]
 build: [
   ["dune" "build" "-p" name "-j" jobs]

@@ -1,5 +1,13 @@
 ## v2.0-dev
 
+- `prometheus-app`: allow specifying the address as well as the port to bind
+  to with `--listen-prometheus`.
+
+  As well as a bare port number, the option now accepts `tcp:HOST[:PORT]`
+  (with IPv6 addresses in square brackets, and the port defaulting to 9090)
+  and `unix:PATH` for domain sockets, in the same syntax as `capnp-rpc-unix`.
+  (@rbjorklin @avsm @talex5 #51 #72)
+
 - Add a new `prometheus-eio` serving package (@mtelvers @avsm #60)
 
   `Prometheus_eio.callback ()` is a cohttp-eio handler that serves the
