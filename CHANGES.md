@@ -1,5 +1,8 @@
 ## v2.0-dev
 
+- `prometheus-app`: add `Prometheus_unix.config` to build a configuration
+  without cmdliner (@avsm @talex5 requested by @Nymphium #44)
+
 - `prometheus-app`: allow serving a registry other than the default one.
   (@avsm #54)
 

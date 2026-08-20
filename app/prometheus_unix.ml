@@ -49,6 +49,11 @@ end
 
 type config = Listen_address.t option
 
+let config ?(host=Listen_address.default_host) ?(port=Listen_address.default_port) () =
+  if not (Listen_address.valid_port port) then
+    invalid_arg (Fmt.str "Prometheus_unix.config: port %d is out of range" port);
+  Some (`TCP (`Host host, `Port port))
+
 let sockaddr = function
   | `Unix_domain_socket (`File path) -> Unix.ADDR_UNIX path
   | `TCP (`Host host, `Port port) ->

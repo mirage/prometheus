@@ -31,9 +31,21 @@ module Listen_address : sig
 
   val pp : Format.formatter -> t -> unit
   (** [pp] formats a config in the syntax accepted by {!of_string}. *)
+
+  val default_host : string
+  (** [default_host] is ["0.0.0.0"], the interface used when none is given. *)
+
+  val default_port : int
+  (** [default_port] is [9090], the port used when none is given. *)
 end
 
 type config = Listen_address.t option
+
+val config : ?host:string -> ?port:int -> unit -> config
+(** [config ()] is a configuration that serves metrics over TCP on [host]
+    (default {!Listen_address.default_host}) and [port]
+    (default {!Listen_address.default_port}).
+    @raise Invalid_argument if [port] is not between 1 and 65535. *)
 
 val serve : ?registry:Prometheus_lwt.CollectorRegistry.t -> config -> unit Lwt.t list
 (** [serve config] starts a Cohttp server according to config.

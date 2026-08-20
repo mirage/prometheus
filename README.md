@@ -69,6 +69,12 @@ Tick!
 `tcp:127.0.0.1:9090`, `tcp:[::1]:9090`, `tcp:localhost` or
 `unix:/run/metrics.sock`. The interface and port defaults to 0.0.0.0:9090.
 
+Applications can also build the same configuration directly:
+
+```ocaml
+let threads = Prometheus_unix.serve (Prometheus_unix.config ~port:9090 ())
+```
+
 Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `Unix` dependency.
 
 The `prometheus-reporter` opam package provides the parts of `prometheus-app`
