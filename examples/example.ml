@@ -1,4 +1,5 @@
-(** Run this with [example.native --listen-prometheus=9090].
+(** Run this with [example.exe --listen-prometheus=9090], or with an
+    explicit address such as [--listen-prometheus=tcp:127.0.0.1:9090].
     View the metrics with:
 
     curl http://localhost:9090/metrics

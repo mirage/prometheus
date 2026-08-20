@@ -1,4 +1,11 @@
 (test
  (name test)
  (package prometheus-reporter)
+ (modules test)
  (libraries prometheus prometheus-reporter alcotest))
+
+(test
+ (name test_unix)
+ (package prometheus-app)
+ (modules test_unix)
+ (libraries prometheus-app.unix alcotest))
