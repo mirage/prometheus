@@ -1,7 +1,9 @@
-let config = Alcotest.testable Prometheus_unix.pp ( = )
+module Listen_address = Prometheus_unix.Listen_address
 
-let tcp host port = Some (`TCP (`Host host, `Port port))
-let unix_socket path = Some (`Unix_domain_socket (`File path))
+let config = Alcotest.testable Listen_address.pp ( = )
+
+let tcp host port = `TCP (`Host host, `Port port)
+let unix_socket path = `Unix_domain_socket (`File path)
 
 let mentions sub s =
   let n = String.length sub and len = String.length s in
@@ -10,19 +12,19 @@ let mentions sub s =
 
 let parses s expected () =
   Alcotest.(check (result config string)) s (Ok expected)
-    (Result.map_error (fun (`Msg m) -> m) (Prometheus_unix.of_string s))
+    (Result.map_error (fun (`Msg m) -> m) (Listen_address.of_string s))
 
 let rejects s expected () =
-  match Prometheus_unix.of_string s with
-  | Ok c -> Alcotest.failf "Expected %S to be rejected, got %a" s Prometheus_unix.pp c
+  match Listen_address.of_string s with
+  | Ok c -> Alcotest.failf "Expected %S to be rejected, got %a" s Listen_address.pp c
   | Error (`Msg m) ->
     if not (mentions expected m) then
       Alcotest.failf "Rejected %S with %S, expected it to mention %S" s m expected
 
 let round_trips s () =
-  match Prometheus_unix.of_string s with
+  match Listen_address.of_string s with
   | Error (`Msg m) -> Alcotest.failf "%s" m
-  | Ok c -> parses (Format.asprintf "%a" Prometheus_unix.pp c) c ()
+  | Ok c -> parses (Format.asprintf "%a" Listen_address.pp c) c ()
 
 let accepted = [
   "1", tcp "0.0.0.0" 1;
@@ -78,11 +80,9 @@ let error_case (s, expected) = Alcotest.test_case (Printf.sprintf "%S" s) `Quick
 let round_trip_case (s, _) = Alcotest.test_case (Printf.sprintf "%S" s) `Quick (round_trips s)
 
 let printing = [
-  Alcotest.test_case "none" `Quick (fun () ->
-    Alcotest.(check string) "none" "none" (Format.asprintf "%a" Prometheus_unix.pp None));
   Alcotest.test_case "ipv6 brackets" `Quick (fun () ->
     Alcotest.(check string) "tcp:[::1]:9090" "tcp:[::1]:9090"
-      (Format.asprintf "%a" Prometheus_unix.pp (tcp "::1" 9090)));
+      (Format.asprintf "%a" Listen_address.pp (tcp "::1" 9090)));
 ]
 
 let () =

@@ -17,19 +17,23 @@
 module Logging = Prometheus_reporter_unix.Logging
 (** Report metrics for messages logged. See {!Prometheus_reporter_unix.Logging}. *)
 
-type config =
-  [ `TCP of [ `Host of string ] * [ `Port of int ]
-  | `Unix_domain_socket of [ `File of string ] ] option
-(** The address to serve metrics on, if any. [`Host] is a hostname, an IPv4
-    address or an IPv6 address without brackets. *)
+module Listen_address : sig
+  type t =
+    [ `TCP of [ `Host of string ] * [ `Port of int ]
+    | `Unix_domain_socket of [ `File of string ] ]
+  (** The address to serve metrics on, if any. [`Host] is a hostname, an IPv4
+      address or an IPv6 address without brackets. *)
 
-val of_string : string -> (config, [`Msg of string]) result
-(** [of_string s] parses a listen address such as ["9090"],
-    ["tcp:127.0.0.1:9090"], ["tcp:[::1]:9090"], ["tcp:localhost"] or
-    ["unix:/run/metrics.sock"]. *)
+  val of_string : string -> (t, [`Msg of string]) result
+  (** [of_string s] parses a listen address such as ["9090"],
+      ["tcp:127.0.0.1:9090"], ["tcp:[::1]:9090"], ["tcp:localhost"] or
+      ["unix:/run/metrics.sock"]. *)
 
-val pp : Format.formatter -> config -> unit
-(** [pp] formats a config in the syntax accepted by {!of_string}. *)
+  val pp : Format.formatter -> t -> unit
+  (** [pp] formats a config in the syntax accepted by {!of_string}. *)
+end
+
+type config = Listen_address.t option
 
 val serve : config -> unit Lwt.t list
 (** [serve config] starts a Cohttp server according to config.
@@ -41,4 +45,4 @@ val serve : config -> unit Lwt.t list
 
 val opts : config Cmdliner.Term.t
 (** [opts] is the extra command-line options to offer Prometheus
-    monitoring. It rejects addresses that {!of_string} cannot parse. *)
+    monitoring. It rejects addresses that {!Listen_address} cannot parse. *)
