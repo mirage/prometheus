@@ -35,13 +35,13 @@ end
 
 type config = Listen_address.t option
 
-val serve : config -> unit Lwt.t list
+val serve : ?registry:Prometheus_lwt.CollectorRegistry.t -> config -> unit Lwt.t list
 (** [serve config] starts a Cohttp server according to config.
     It returns a singleton list containing the thread to monitor,
     or an empty list if no server is configured. The socket is bound before
     the thread is returned.
-    @raise Failure if the address cannot be resolved.
-    @raise Unix.Unix_error if the socket cannot be bound. *)
+    @param registry The registry to serve, defaulting to
+      {!Prometheus_lwt.CollectorRegistry.default}. *)
 
 val opts : config Cmdliner.Term.t
 (** [opts] is the extra command-line options to offer Prometheus

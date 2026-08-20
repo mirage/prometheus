@@ -101,7 +101,9 @@ module CollectorRegistry : sig
   (** The result of reading a set of metrics. *)
 
   val create : unit -> t
-  (** [create ()] is a fresh registry. This is mostly useful for testing. *)
+  (** [create ()] is a fresh registry, holding none of the metrics registered
+      with {!default}. Use it to keep an application's metrics separate, and
+      pass it to the reporter via its [~registry] argument when serving. *)
 
   val default : t
   (** The default registry. *)

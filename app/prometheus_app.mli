@@ -24,6 +24,7 @@ module TextFormat_0_0_4 = Prometheus_reporter.TextFormat_0_0_4
 
 module Cohttp (S : Cohttp_lwt.S.Server) : sig
   val callback :
+    ?registry:Prometheus_lwt.CollectorRegistry.t ->
     S.conn ->
     Cohttp.Request.t ->
     Cohttp_lwt.Body.t -> (Cohttp.Response.t * Cohttp_lwt.Body.t) Lwt.t

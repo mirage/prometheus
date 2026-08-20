@@ -67,11 +67,11 @@ let listen sockaddr =
    with exn -> close socket; raise exn);
   `TCP (`Socket (Lwt_unix.of_unix_file_descr socket))
 
-let serve = function
+let serve ?registry = function
   | None -> []
   | Some conf ->
     let mode = listen (sockaddr conf) in
-    let callback = Server.callback in
+    let callback = Server.callback ?registry in
     let thread = Cohttp_lwt_unix.Server.create ~mode (Cohttp_lwt_unix.Server.make ~callback ()) in
     [thread]
 
