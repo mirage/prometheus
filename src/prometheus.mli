@@ -115,6 +115,9 @@ module CollectorRegistry : sig
   (** [register t metric collector] adds [metric] to the set of metrics being collected.
       It will call [collector ()] to collect the values each time [collect] is called. *)
 
+  val unregister : t -> MetricInfo.t -> unit
+  (** [unregister t metric] removes [metric] from the set of metrics being collected. *)
+
   val register_pre_collect : t -> (unit -> unit) -> unit
   (** [register_pre_collect t fn] arranges for [fn ()] to be called at the start
       of each collection. This is useful if one expensive call provides
@@ -142,6 +145,16 @@ module type METRIC = sig
       The order of the values must be the same as the order of the [label_names] passed to [v_labels];
       you may wish to write a wrapper function with labelled arguments to avoid mistakes.
       If this is called multiple times with the same set of values, the existing metric will be returned. *)
+
+  val unregister_labels : family -> string list -> unit
+  (** [unregister_labels family label_values] unregisters the metric in [family] with these values
+      for the labels. The order of the values must be the same as the order of the [label_names]
+      passed to [v_labels]; you may wish to write a wrapper function with labelled arguments to
+      avoid mistakes.
+
+      Note that any metric value previously obtained from {!labels} for these label values becomes
+      detached by this call. Updates to such a stale value are silently ignored, and later calls
+      to {!labels} with the same label values will create a fresh metric starting from zero. *)
 
   val v_label : label_name:string -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> (string -> t)
   (** [v_label] is a convenience wrapper around [v_labels] for the case where there is a single label.

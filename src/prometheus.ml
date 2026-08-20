@@ -132,6 +132,9 @@ module CollectorRegistry = struct
     ensure_not_registered t info;
     t.metrics <- MetricFamilyMap.add info collector t.metrics
 
+  let unregister t info =
+    t.metrics <- MetricFamilyMap.remove info t.metrics
+
   let collect t =
     if !gettime == dummy_gettime then
       invalid_arg "CollectorRegistry.collect called, but Prometheus.init hasn't been called";
@@ -144,6 +147,7 @@ module type METRIC = sig
   type t
   val v_labels : label_names:string list -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> family
   val labels : family -> string list -> t
+  val unregister_labels : family -> string list -> unit
   val v_label : label_name:string -> ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> (string -> t)
   val v : ?registry:CollectorRegistry.t -> help:string -> ?namespace:string -> ?subsystem:string -> string -> t
 end
@@ -188,6 +192,10 @@ end = struct
       let child = Child.create () in
       t.children <- LabelSetMap.add label_values child t.children;
       child
+
+  let unregister_labels t label_values =
+    assert (List.length t.metric.MetricInfo.label_names = List.length label_values);
+    t.children <- LabelSetMap.remove label_values t.children
 
   let v_label ~label_name ?registry ~help ?namespace ?subsystem name =
     let family = v_labels ~label_names:[label_name] ?registry ~help ?namespace ?subsystem name in
