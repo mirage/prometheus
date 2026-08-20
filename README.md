@@ -72,7 +72,8 @@ Tick!
 Applications can also build the same configuration directly:
 
 ```ocaml
-let threads = Prometheus_unix.serve (Prometheus_unix.config ~port:9090 ())
+let listen_address = Prometheus_unix.Listen_address.tcp ~port:9090 ()
+let threads = Prometheus_unix.serve (Prometheus_unix.config ~listen_address ())
 ```
 
 Unikernels can use `Prometheus_app` instead of `Prometheus_unix` to avoid the `Unix` dependency.

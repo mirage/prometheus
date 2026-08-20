@@ -21,19 +21,27 @@ module Listen_address = struct
 
   let valid_port port = port > 0 && port <= 65535
 
+  let tcp ?(host = default_host) ?(port = default_port) () =
+    if not (valid_port port) then
+      invalid_arg (Fmt.str "Listen_address.tcp: port %d is out of range" port);
+    `TCP (`Host host, `Port port)
+
+  let unix = function
+    | "" -> invalid_arg "Listen_address.unix: the path is empty";
+    | path -> `Unix_domain_socket (`File path)
+
   let parse_tcp s host_port =
     let uri = Uri.of_string ("tcp://" ^ host_port) in
     match Uri.host uri, Uri.port uri, Uri.path uri with
     | Some host, port, ("" | "/") when host <> "" ->
       let port = Option.value port ~default:default_port in
-      if valid_port port then Ok (`TCP (`Host host, `Port port))
+      if valid_port port then Ok (tcp ~host ~port ())
       else error "Port %d is out of range in %S" port s
     | _ -> error "Invalid address %S, expected tcp:HOST[:PORT]" s
 
   let of_string s =
     match int_of_string_opt s with
-    | Some port when valid_port port ->
-      Ok (`TCP (`Host default_host, `Port port))
+    | Some port when valid_port port -> Ok (tcp ~port ())
     | Some _ -> error "Port %S is out of range" s
     | None ->
       match String.index_opt s ':' with
@@ -43,16 +51,13 @@ module Listen_address = struct
         match String.sub s 0 i with
         | "tcp" -> parse_tcp s rest
         | "unix" when rest = "" -> error "Missing path in %S, expected unix:PATH" s
-        | "unix" -> Ok (`Unix_domain_socket (`File rest))
+        | "unix" -> Ok (unix rest)
         | scheme -> error "Unsupported scheme %S in %S, %s" scheme s syntax
 end
 
 type config = Listen_address.t option
 
-let config ?(host=Listen_address.default_host) ?(port=Listen_address.default_port) () =
-  if not (Listen_address.valid_port port) then
-    invalid_arg (Fmt.str "Prometheus_unix.config: port %d is out of range" port);
-  Some (`TCP (`Host host, `Port port))
+let config ?listen_address () = listen_address
 
 let sockaddr = function
   | `Unix_domain_socket (`File path) -> Unix.ADDR_UNIX path

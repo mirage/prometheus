@@ -24,6 +24,15 @@ module Listen_address : sig
   (** The address to serve metrics on, if any. [`Host] is a hostname, an IPv4
       address or an IPv6 address without brackets. *)
 
+  val tcp : ?host:string -> ?port:int -> unit -> t
+  (** [tcp ()] is the address of a TCP socket bound to [host] (default
+      ["0.0.0.0"]) and [port] (default [9090]).
+      @raise Invalid_argument if [port] is not between 1 and 65535. *)
+
+  val unix : string -> t
+  (** [unix path] is the path of a Unix domain socket bound to [path].
+      @raise Invalid_argument if [path] is empty. *)
+
   val of_string : string -> (t, [`Msg of string]) result
   (** [of_string s] parses a listen address such as ["9090"],
       ["tcp:127.0.0.1:9090"], ["tcp:[::1]:9090"], ["tcp:localhost"] or
@@ -31,21 +40,12 @@ module Listen_address : sig
 
   val pp : Format.formatter -> t -> unit
   (** [pp] formats a config in the syntax accepted by {!of_string}. *)
-
-  val default_host : string
-  (** [default_host] is ["0.0.0.0"], the interface used when none is given. *)
-
-  val default_port : int
-  (** [default_port] is [9090], the port used when none is given. *)
 end
 
-type config = Listen_address.t option
+type config
 
-val config : ?host:string -> ?port:int -> unit -> config
-(** [config ()] is a configuration that serves metrics over TCP on [host]
-    (default {!Listen_address.default_host}) and [port]
-    (default {!Listen_address.default_port}).
-    @raise Invalid_argument if [port] is not between 1 and 65535. *)
+val config : ?listen_address:Listen_address.t -> unit -> config
+(** [config ~listen_address ()] serves metrics on [listen_address]. *)
 
 val serve : ?registry:Prometheus_lwt.CollectorRegistry.t -> config -> unit Lwt.t list
 (** [serve config] starts a Cohttp server according to config.
