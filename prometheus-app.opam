@@ -35,11 +35,11 @@ depends: [
   "prometheus-lwt" {= version}
   "prometheus-reporter" {= version}
   "fmt" {>= "0.8.7"}
-  "cohttp-lwt" {>= "4.0.0"}
-  "cohttp-lwt-unix" {>= "4.0.0"}
+  "cohttp-lwt" {>= "6.0.0"}
+  "cohttp-lwt-unix" {>= "6.0.0"}
   "lwt" {>= "2.5.0"}
   "cmdliner"
-  "uri" {>= "2.0.0"}
+  "uri" {>= "4.4.0"}
   "alcotest" {with-test}
 ]
 build: [
