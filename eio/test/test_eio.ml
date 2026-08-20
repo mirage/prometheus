@@ -43,7 +43,7 @@ let test_eio_server ~net () =
   Switch.run @@ fun sw ->
   let socket = Eio.Net.listen net ~sw ~backlog:128 ~reuse_addr:true (`Unix "./socket") in
   let addr = Uri.make ~scheme:"httpunix" ~host:"./socket" ~path:"/metrics" () in
-  let callback = Prometheus_eio.callback ~registry () in
+  let callback = Prometheus_eio.callback ~registry in
   let server = Cohttp_eio.Server.make ~callback () in
   Fiber.fork_daemon ~sw (fun () -> Cohttp_eio.Server.run socket server ~on_error:raise);
   let client = Cohttp_eio.Client.make net ~https:None in

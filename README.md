@@ -78,6 +78,20 @@ applications can serve metrics with any web server such as Dream or Piaf.
 `Prometheus_reporter_unix` adds the process start-time metric and a Logs
 reporter that counts logged messages.
 
+### Custom registries
+
+Metrics go to `Prometheus.CollectorRegistry.default` unless a `~registry`
+is supplied to allow an application to serve its own custom metrics:
+
+```ocaml
+let registry = Prometheus.CollectorRegistry.create ()
+let requests = Prometheus.Counter.v ~registry ~help:"Requests handled" "requests_total"
+
+let threads =
+  let registry = Prometheus_lwt.CollectorRegistry.of_registry registry in
+  Prometheus_unix.serve ~registry prometheus_config
+```
+
 ### Lwt collectors
 
 The `prometheus-lwt` opam package provides `Prometheus_lwt` with collectors

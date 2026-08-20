@@ -1,6 +1,6 @@
 (* Eio support for Prometheus. *)
 
-let callback ?(registry=Prometheus.CollectorRegistry.default) () _conn req _body =
+let callback ?(registry=Prometheus.CollectorRegistry.default) _conn req _body =
   match Http.Request.meth req, Http.Request.resource req with
   | `GET, "/metrics" ->
     let data = Prometheus.CollectorRegistry.collect registry in

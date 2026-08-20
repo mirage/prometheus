@@ -1,5 +1,11 @@
 ## v2.0-dev
 
+- `prometheus-app`: allow serving a registry other than the default one.
+  (@avsm #54)
+
+  `Prometheus_app.Cohttp(S).callback` and `Prometheus_unix.serve` take an
+  optional `?registry` argument.
+
 - `prometheus-app`: allow specifying the address as well as the port to bind
   to with `--listen-prometheus`.
 
