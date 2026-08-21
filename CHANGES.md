@@ -1,25 +1,8 @@
-## v2.0-dev
-
-- `prometheus-app`: add `Prometheus_unix.config` to build a configuration
-  without cmdliner (@avsm @talex5 requested by @Nymphium #44 #73)
-
-- `prometheus-app`: allow serving a registry other than the default one.
-  (@avsm #54)
-
-  `Prometheus_app.Cohttp(S).callback` and `Prometheus_unix.serve` take an
-  optional `?registry` argument.
-
-- `prometheus-app`: allow specifying the address as well as the port to bind
-  to with `--listen-prometheus`.
-
-  As well as a bare port number, the option now accepts `tcp:HOST[:PORT]`
-  (with IPv6 addresses in square brackets, and the port defaulting to 9090)
-  and `unix:PATH` for domain sockets, in the same syntax as `capnp-rpc-unix`.
-  (@rbjorklin @avsm @talex5 #51 #72)
+## v2.0 (2026-08-21)
 
 - Add a new `prometheus-eio` serving package (@mtelvers @avsm #60)
 
-  `Prometheus_eio.callback ()` is a cohttp-eio handler that serves the
+  `Prometheus_eio.callback` is a cohttp-eio handler that serves the
   default registry at `/metrics`. It depends only on `prometheus-reporter`,
   so no Lwt or cohttp-lwt code is linked into an Eio application.
 
@@ -41,6 +24,23 @@
 
   Applications that collected via the core in an Lwt context should use
   `Prometheus_lwt.CollectorRegistry.collect`.
+
+- `prometheus-app`: add `Prometheus_unix.config` to build a configuration
+  without cmdliner (@avsm @talex5 requested by @Nymphium #44 #73)
+
+- `prometheus-app`: allow serving a registry other than the default one.
+  (@avsm #54)
+
+  `Prometheus_app.Cohttp(S).callback` and `Prometheus_unix.serve` take an
+  optional `?registry` argument.
+
+- `prometheus-app`: allow specifying the address as well as the port to bind
+  to with `--listen-prometheus`.
+
+  As well as a bare port number, the option now accepts `tcp:HOST[:PORT]`
+  (with IPv6 addresses in square brackets, and the port defaulting to 9090)
+  and `unix:PATH` for domain sockets, in the same syntax as `capnp-rpc-unix`.
+  (@rbjorklin @avsm @talex5 #51 #72)
 
 ## v1.4 (2026-08-09)
 
